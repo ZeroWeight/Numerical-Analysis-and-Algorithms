@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Drawing;
-using System.Security.Cryptography.X509Certificates;
 using System.Windows.Forms;
 
 namespace ImagePro
@@ -10,8 +9,11 @@ namespace ImagePro
     {
         private static Bitmap _imgOri;
         private static Bitmap _imgDes;
-        private static int row = 300;
-        private static double theta = Math.PI / 6;
+        private static int row = 250;
+        private static double theta = Math.PI;
+        private static double amp = 1;
+        private static double p = 20;
+        private static double phi = 0;
 
         public Form1()
         {
@@ -86,11 +88,6 @@ namespace ImagePro
         private void saveFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
             pictureBox2.Image.Save(saveFileDialog1.FileName);
-        }
-
-        private Color CalcColor(double i, double j)
-        {
-            return new Color();
         }
 
         private double CubicPolate(double v0, double v1, double v2, double v3, double fracy)
@@ -206,6 +203,43 @@ namespace ImagePro
                 if (y1[i] < 0) y1[i] = 0.0;
             }
             return Color.FromArgb((int)y1[3], (int)y1[2], (int)y1[1], (int)y1[0]);
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < _imgOri.Height; ++i)
+                for (int j = 0; j < _imgOri.Width; ++j)
+                {
+                    double cx = i - _imgOri.Height / 2.0;
+                    double cy = j - _imgOri.Width / 2.0;
+                    double r = Math.Sqrt(cx * cx + cy * cy);
+                    if (r <= row)
+                    {
+                        double ox, oy;
+                        if (r > 1)
+                        {
+                            double amount = amp *
+                                Math.Sin(r / p * Math.PI - phi) *
+                                Math.Exp(phi - 5 * r / row);
+
+                            ox = cx * (1 + amount) + _imgOri.Height / 2.0;
+                            oy = cy * (1 + amount) + _imgOri.Width / 2.0;
+                        }
+                        else
+                        {
+                            ox = _imgOri.Height / 2.0;
+                            oy = _imgOri.Width / 2.0;
+                        }
+                        _imgDes.SetPixel(i, j, BiCubic(ox, oy));
+                    }
+                    else
+                    {
+                        _imgDes.SetPixel(i, j, _imgOri.GetPixel(i, j));
+                    }
+                }
+
+            pictureBox2.Image = _imgDes;
+            pictureBox2.Update();
         }
     }
 }
