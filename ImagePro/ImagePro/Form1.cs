@@ -45,7 +45,7 @@ namespace ImagePro
             label2.Text = "Ready";
             label3.Text = "distortion amplitude " + (double)trackBar2.Value / 100.0;
             label4.Text = "wave length " + (double)trackBar3.Value;
-            label5.Text = "initial distortion " + (double)trackBar2.Value / 100.0;
+            label5.Text = "initial distortion " + (double)trackBar4.Value / 100.0;
             _g = pictureBox2.CreateGraphics();
             radioButton1.Checked = true;
         }
@@ -161,8 +161,8 @@ namespace ImagePro
             for (int i = 0; i < _imgOri.Height; ++i)
                 for (int j = 0; j < _imgOri.Width; ++j)
                 {
-                    double cx = i - _imgOri.Height / 2.0;
-                    double cy = j - _imgOri.Width / 2.0;
+                    double cx = i - _centerX;
+                    double cy = j - _centerY;
                     double r = Math.Sqrt(cx * cx + cy * cy);
                     if (r <= _row)
                     {
@@ -173,13 +173,13 @@ namespace ImagePro
                                             Math.Sin(r / _p * Math.PI - _phi) *
                                             Math.Exp(_phi - 5 * r / _row);
 
-                            ox = cx * (1 + amount) + _imgOri.Height / 2.0;
-                            oy = cy * (1 + amount) + _imgOri.Width / 2.0;
+                            ox = cx * (1 + amount) + _centerX;
+                            oy = cy * (1 + amount) + _centerY;
                         }
                         else
                         {
-                            ox = _imgOri.Height / 2.0;
-                            oy = _imgOri.Width / 2.0;
+                            ox = _centerX;
+                            oy = _centerY;
                         }
                         if (radioButton1.Checked) _imgDes.SetPixel(i, j, Nearest(ox, oy));
                         else if (radioButton2.Checked) _imgDes.SetPixel(i, j, BiLine(ox, oy));
