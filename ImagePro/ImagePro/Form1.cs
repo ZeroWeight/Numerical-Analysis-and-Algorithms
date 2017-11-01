@@ -47,24 +47,14 @@ namespace ImagePro
             label4.Text = "wave length " + (double)trackBar3.Value;
             label5.Text = "initial distortion " + (double)trackBar2.Value / 100.0;
             _g = pictureBox2.CreateGraphics();
+            radioButton1.Checked = true;
         }
+
+        #region button
 
         private void button1_Click(object sender, EventArgs e)
         {
             openFileDialog1.ShowDialog();
-        }
-
-        private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
-        {
-            pictureBox1.Image = Image.FromFile(openFileDialog1.FileName);
-            _imgOri = (Bitmap)pictureBox1.Image;
-            _imgDes = (Bitmap)_imgOri.Clone();
-            pictureBox2.Image = _imgDes;
-            pictureBox1.Update();
-            pictureBox2.Update();
-            button2.Enabled = true;
-            button3.Enabled = true;
-            button4.Enabled = true;
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -77,6 +67,37 @@ namespace ImagePro
             button5.Enabled = false;
             button6.Enabled = false;
         }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            saveFileDialog1.ShowDialog();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            _status = 2;
+            button1.Enabled = false;
+            button2.Enabled = false;
+            button3.Enabled = false;
+            button4.Enabled = false;
+            button5.Enabled = false;
+            button6.Enabled = false;
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            _imgOri = (Bitmap)_imgDes.Clone();
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            _imgDes = _imgOri;
+            pictureBox2.Image = _imgOri;
+        }
+
+        #endregion button
+
+        #region method
 
         private void rotation()
         {
@@ -109,7 +130,9 @@ namespace ImagePro
                             ox = _centerX;
                             oy = _centerY;
                         }
-                        _imgDes.SetPixel(i, j, BiCubic(ox, oy));
+                        if (radioButton1.Checked) _imgDes.SetPixel(i, j, Nearest(ox, oy));
+                        else if (radioButton2.Checked) _imgDes.SetPixel(i, j, BiLine(ox, oy));
+                        else if (radioButton3.Checked) _imgDes.SetPixel(i, j, BiCubic(ox, oy));
                     }
                     else
                     {
@@ -158,7 +181,9 @@ namespace ImagePro
                             ox = _imgOri.Height / 2.0;
                             oy = _imgOri.Width / 2.0;
                         }
-                        _imgDes.SetPixel(i, j, BiCubic(ox, oy));
+                        if (radioButton1.Checked) _imgDes.SetPixel(i, j, Nearest(ox, oy));
+                        else if (radioButton2.Checked) _imgDes.SetPixel(i, j, BiLine(ox, oy));
+                        else if (radioButton3.Checked) _imgDes.SetPixel(i, j, BiCubic(ox, oy));
                     }
                     else
                     {
@@ -175,92 +200,31 @@ namespace ImagePro
             pictureBox2.Update();
         }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
-            saveFileDialog1.ShowDialog();
-        }
+        #endregion method
+
+        #region file
 
         private void saveFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
             pictureBox2.Image.Save(saveFileDialog1.FileName);
         }
 
-        private double CubicPolate(double v0, double v1, double v2, double v3, double fracy)
+        private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
-            double a = (v3 - v2) - (v0 - v1);
-            double b = (v0 - v1) - a;
-            double c = v2 - v0;
-            double d = v1;
-            return d + fracy * (c + fracy * (b + fracy * a));
+            pictureBox1.Image = Image.FromFile(openFileDialog1.FileName);
+            _imgOri = (Bitmap)pictureBox1.Image;
+            _imgDes = (Bitmap)_imgOri.Clone();
+            pictureBox2.Image = _imgDes;
+            pictureBox1.Update();
+            pictureBox2.Update();
+            button2.Enabled = true;
+            button3.Enabled = true;
+            button4.Enabled = true;
         }
 
-        private Color BiCubic(double x, double y)
-        {
-            double[,,] ndata = new double[4, 4, 4];
-            double[] x1 = new double[4];
-            double[] x2 = new double[4];
-            double[] x3 = new double[4];
-            double[] x4 = new double[4];
-            double[] y1 = new double[4];
-            int[] corX = new int[4];
-            int[] corY = new int[4];
+        #endregion file
 
-            #region cordef
-
-            corX[0] = (int)x - 1;
-            corX[1] = (int)x;
-            corX[2] = (int)x + 1;
-            corX[3] = (int)x + 2;
-            corY[0] = (int)y - 1;
-            corY[1] = (int)y;
-            corY[2] = (int)y + 1;
-            corY[3] = (int)y + 2;
-            for (int j = 0; j < 4; ++j)
-                for (int k = 0; k < 4; ++k)
-                {
-                    if (corX[j] >= 0 && corX[j] < _imgOri.Width &&
-                        corY[k] >= 0 && corY[k] < _imgOri.Height)
-                    {
-                        ndata[j, k, 0] = _imgOri.GetPixel(corX[j], corY[k]).B;
-                        ndata[j, k, 1] = _imgOri.GetPixel(corX[j], corY[k]).G;
-                        ndata[j, k, 2] = _imgOri.GetPixel(corX[j], corY[k]).R;
-                        ndata[j, k, 3] = _imgOri.GetPixel(corX[j], corY[k]).A;
-                    }
-                    else
-                    {
-                        ndata[j, k, 0] = ndata[j, k, 1] = ndata[j, k, 2] = 0;
-                        ndata[j, k, 3] = 255;
-                    }
-                }
-
-            #endregion cordef
-
-            for (int i = 0; i < 4; ++i)
-            {
-                x1[i] = CubicPolate(ndata[0, 0, i], ndata[1, 0, i], ndata[2, 0, i], ndata[3, 0, i], x - (int)x);
-                x2[i] = CubicPolate(ndata[0, 1, i], ndata[1, 1, i], ndata[2, 1, i], ndata[3, 1, i], x - (int)x);
-                x3[i] = CubicPolate(ndata[0, 2, i], ndata[1, 2, i], ndata[2, 2, i], ndata[3, 2, i], x - (int)x);
-                x4[i] = CubicPolate(ndata[0, 3, i], ndata[1, 3, i], ndata[2, 3, i], ndata[3, 3, i], x - (int)x);
-                y1[i] = CubicPolate(x1[i], x2[i], x3[i], x4[i], y - (int)y);
-            }
-            for (int i = 0; i < 4; ++i)
-            {
-                if (y1[i] > 255.0) y1[i] = 255.0;
-                if (y1[i] < 0) y1[i] = 0.0;
-            }
-            return Color.FromArgb((int)y1[3], (int)y1[2], (int)y1[1], (int)y1[0]);
-        }
-
-        private void button4_Click(object sender, EventArgs e)
-        {
-            _status = 2;
-            button1.Enabled = false;
-            button2.Enabled = false;
-            button3.Enabled = false;
-            button4.Enabled = false;
-            button5.Enabled = false;
-            button6.Enabled = false;
-        }
+        #region mouse
 
         private void MouseDown(object sender, MouseEventArgs e)
         {
@@ -353,6 +317,10 @@ namespace ImagePro
             _pressdown = false;
         }
 
+        #endregion mouse
+
+        #region trackBar
+
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
             label1.Text = "Rotation angle: " + trackBar1.Value;
@@ -373,15 +341,154 @@ namespace ImagePro
             label5.Text = "initial distortion " + (double)trackBar4.Value / 100.0;
         }
 
-        private void button5_Click(object sender, EventArgs e)
+        #endregion trackBar
+
+        #region kernel
+
+        private double CubicPolate(double v0, double v1, double v2, double v3, double fracy)
         {
-            _imgOri = (Bitmap)_imgDes.Clone();
+            double a = (v3 - v2) - (v0 - v1);
+            double b = (v0 - v1) - a;
+            double c = v2 - v0;
+            double d = v1;
+            return d + fracy * (c + fracy * (b + fracy * a));
         }
 
-        private void button6_Click(object sender, EventArgs e)
+        private Color BiCubic(double x, double y)
         {
-            _imgDes = _imgOri;
-            pictureBox2.Image = _imgOri;
+            double[,,] ndata = new double[4, 4, 4];
+            double[] x1 = new double[4];
+            double[] x2 = new double[4];
+            double[] x3 = new double[4];
+            double[] x4 = new double[4];
+            double[] y1 = new double[4];
+            int[] corX = new int[4];
+            int[] corY = new int[4];
+
+            #region cordef
+
+            corX[0] = (int)x - 1;
+            corX[1] = (int)x;
+            corX[2] = (int)x + 1;
+            corX[3] = (int)x + 2;
+            corY[0] = (int)y - 1;
+            corY[1] = (int)y;
+            corY[2] = (int)y + 1;
+            corY[3] = (int)y + 2;
+            for (int j = 0; j < 4; ++j)
+                for (int k = 0; k < 4; ++k)
+                {
+                    if (corX[j] >= 0 && corX[j] < _imgOri.Width &&
+                        corY[k] >= 0 && corY[k] < _imgOri.Height)
+                    {
+                        ndata[j, k, 0] = _imgOri.GetPixel(corX[j], corY[k]).B;
+                        ndata[j, k, 1] = _imgOri.GetPixel(corX[j], corY[k]).G;
+                        ndata[j, k, 2] = _imgOri.GetPixel(corX[j], corY[k]).R;
+                        ndata[j, k, 3] = _imgOri.GetPixel(corX[j], corY[k]).A;
+                    }
+                    else
+                    {
+                        ndata[j, k, 0] = ndata[j, k, 1] = ndata[j, k, 2] = 0;
+                        ndata[j, k, 3] = 255;
+                    }
+                }
+
+            #endregion cordef
+
+            for (int i = 0; i < 4; ++i)
+            {
+                x1[i] = CubicPolate(ndata[0, 0, i], ndata[1, 0, i], ndata[2, 0, i], ndata[3, 0, i], x - (int)x);
+                x2[i] = CubicPolate(ndata[0, 1, i], ndata[1, 1, i], ndata[2, 1, i], ndata[3, 1, i], x - (int)x);
+                x3[i] = CubicPolate(ndata[0, 2, i], ndata[1, 2, i], ndata[2, 2, i], ndata[3, 2, i], x - (int)x);
+                x4[i] = CubicPolate(ndata[0, 3, i], ndata[1, 3, i], ndata[2, 3, i], ndata[3, 3, i], x - (int)x);
+                y1[i] = CubicPolate(x1[i], x2[i], x3[i], x4[i], y - (int)y);
+            }
+            for (int i = 0; i < 4; ++i)
+            {
+                if (y1[i] > 255.0) y1[i] = 255.0;
+                if (y1[i] < 0) y1[i] = 0.0;
+            }
+            return Color.FromArgb((int)y1[3], (int)y1[2], (int)y1[1], (int)y1[0]);
         }
+
+        private Color BiLine(double x, double y)
+        {
+            int[] arr = new int[4];
+            int[] cor_x = new int[2];
+            int[] cor_y = new int[2];
+            if (x < -1) cor_x[0] = cor_x[1] = -1;
+            else if (x < 0)
+            {
+                cor_x[0] = -1; cor_x[1] = 0;
+            }
+            else if (x >= _imgOri.Width) cor_x[0] = cor_x[1] = -1;
+            else if (x >= _imgOri.Width - 1)
+            {
+                cor_x[0] = _imgOri.Width - 1;
+                cor_x[1] = -1;
+            }
+            else
+            {
+                cor_x[0] = (int)x;
+                cor_x[1] = cor_x[0] + 1;
+            }
+            if (y < -1) cor_y[0] = cor_y[1] = -1;
+            else if (y < 0)
+            {
+                cor_y[0] = -1; cor_y[1] = 0;
+            }
+            else if (y >= _imgOri.Height) cor_y[0] = cor_y[1] = -1;
+            else if (y >= _imgOri.Height - 1)
+            {
+                cor_y[0] = _imgOri.Height - 1;
+                cor_y[1] = -1;
+            }
+            else
+            {
+                cor_y[0] = (int)y;
+                cor_y[1] = cor_y[0] + 1;
+            }
+            int[,,] pixel = new int[2, 2, 4];
+            for (int i = 0; i < 2; ++i)
+                for (int j = 0; j < 2; ++j)
+                {
+                    if (cor_x[i] == -1 || cor_y[j] == -1) pixel[i, j, 0] = pixel[i, j, 1] =
+                            pixel[i, j, 2] = pixel[i, j, 3] = 0;
+                    else
+                    {
+                        pixel[i, j, 0] = _imgOri.GetPixel(cor_x[i], cor_y[j]).A;
+                        pixel[i, j, 1] = _imgOri.GetPixel(cor_x[i], cor_y[j]).R;
+                        pixel[i, j, 2] = _imgOri.GetPixel(cor_x[i], cor_y[j]).G;
+                        pixel[i, j, 3] = _imgOri.GetPixel(cor_x[i], cor_y[j]).B;
+                    }
+                }
+            double[,] xArr = new double[2, 4];
+            double xfrac = x - (int)x;
+            double yfrac = y - (int)y;
+            double temp;
+            for (int i = 0; i < 2; ++i)
+                for (int j = 0; j < 4; ++j)
+                    xArr[i, j] = (1 - xfrac) * pixel[0, i, j] + xfrac * pixel[1, i, j];
+            for (int i = 0; i < 4; ++i)
+            {
+                temp = (1 - yfrac) * xArr[0, i] + yfrac * xArr[1, i];
+                if (temp < 0) arr[i] = 0;
+                else if (temp > 255) arr[i] = 255;
+                else arr[i] = (int)temp;
+            }
+
+            return Color.FromArgb(arr[0], arr[1], arr[2], arr[3]);
+        }
+
+        private Color Nearest(double x, double y)
+        {
+            int nearX = (int)(x + 0.5);
+            int nearY = (int)(y + 0.5);
+            if (nearX < 0 || nearY < 0 || nearX >= _imgOri.Width || nearY >= _imgOri.Height)
+                return Color.Black;
+            else return _imgOri.GetPixel(nearX, nearY);
+        }
+
+        #endregion kernel
     }
 }
