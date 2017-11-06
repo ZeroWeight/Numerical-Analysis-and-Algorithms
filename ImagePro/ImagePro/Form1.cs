@@ -24,6 +24,7 @@ namespace ImagePro
         private static short _cosStatus = 0;
         private static bool _pressdown = false;
         private static Graphics _g;
+        private static int[,,] _point;
 
         public Form1()
         {
@@ -41,6 +42,7 @@ namespace ImagePro
             button4.Enabled = false;
             button5.Enabled = false;
             button6.Enabled = false;
+            button7.Enabled = false;
             label1.Text = "Rotation angle: " + trackBar1.Value;
             label2.Text = "Ready";
             label3.Text = "distortion amplitude " + (double)trackBar2.Value / 100.0;
@@ -66,6 +68,7 @@ namespace ImagePro
             button4.Enabled = false;
             button5.Enabled = false;
             button6.Enabled = false;
+            button7.Enabled = false;
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -82,6 +85,7 @@ namespace ImagePro
             button4.Enabled = false;
             button5.Enabled = false;
             button6.Enabled = false;
+            button7.Enabled = false;
         }
 
         private void button5_Click(object sender, EventArgs e)
@@ -220,6 +224,7 @@ namespace ImagePro
             button2.Enabled = true;
             button3.Enabled = true;
             button4.Enabled = true;
+            button7.Enabled = true;
         }
 
         #endregion file
@@ -236,6 +241,9 @@ namespace ImagePro
                 button2.Enabled = true;
                 button3.Enabled = true;
                 button4.Enabled = true;
+                button7.Enabled = true;
+                trackBar5.Enabled = true;
+                trackBar6.Enabled = true;
                 pictureBox2.Image = _imgOri;
                 pictureBox2.Update();
                 _cosStatus = 0;
@@ -258,6 +266,7 @@ namespace ImagePro
                 button4.Enabled = true;
                 button5.Enabled = true;
                 button6.Enabled = true;
+                button7.Enabled = true;
                 progressBar1.Value = 100;
                 label2.Text = "Ready";
                 label2.Update();
@@ -274,10 +283,51 @@ namespace ImagePro
                 button4.Enabled = true;
                 button5.Enabled = true;
                 button6.Enabled = true;
+                button7.Enabled = true;
                 progressBar1.Value = 100;
                 label2.Text = "Ready";
                 label2.Update();
                 progressBar1.Update();
+            }
+            else if (_status == 3)
+            {
+                trackBar5.Enabled = false;
+                trackBar6.Enabled = false;
+                int lx = _imgOri.Width;
+                int ax = lx / 2;
+                int ly = _imgOri.Height;
+                int ay = ly / 2;
+                int bx = trackBar6.Value;
+                int by = trackBar5.Value;
+                _point = new int[ax / bx + (lx - ax) / bx + 3, ay / by + (ly - ay) / by + 3, 2];
+                int xdl = ax - (ax / bx + 1) * bx;
+                for (int i = 0; i < ax / bx + (lx - ax) / bx + 3; ++i)
+                {
+                    int ydl = ay - (ay / by + 1) * by;
+                    for (int j = 0; j < ay / by + (ly - ay) / by + 3; ++j)
+                    {
+                        _point[i, j, 0] = xdl;
+                        _point[i, j, 1] = ydl;
+                        ydl += by;
+                    }
+                    xdl += bx;
+                }
+                int ttyx = e.X * _imgOri.Width / pictureBox2.Width - _point[0, 0, 0];
+                int ttyy = e.Y * _imgOri.Height / pictureBox2.Height - _point[0, 0, 1];
+                int sardinex = (int)(1.0 * ttyx / bx + 0.5);
+                int sardiney = (int)(1.0 * ttyy / by + 0.5);
+                if (sardinex == 0) sardinex = 1;
+                if (sardiney == 0) sardiney = 1;
+                if (sardinex == ax / bx + (lx - ax) / bx + 2) sardinex -= 1;
+                if (sardiney == ay / by + (ly - ay) / by + 2) sardiney -= 1;
+                _g.FillEllipse(new SolidBrush(Color.Red),
+                    _point[sardinex, sardiney, 0] * pictureBox2.Width / _imgOri.Width - 5,
+                    _point[sardinex, sardiney, 1] * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+                Point dl = Cursor.Position;
+                Cursor.Position = new Point(
+                    _point[sardinex, sardiney, 0] * pictureBox2.Width / _imgOri.Width - e.X + dl.X,
+                    _point[sardinex, sardiney, 1] * pictureBox2.Height / _imgOri.Height - e.Y + dl.Y
+                    );
             }
         }
 
@@ -289,6 +339,7 @@ namespace ImagePro
                 int dy = e.Y * _imgOri.Height / pictureBox2.Height - _centerY;
                 _row = (int)Math.Sqrt(dx * dx + dy * dy);
                 pictureBox2.Image = _imgOri;
+                pictureBox2.Update();
                 _g.FillEllipse(new SolidBrush(Color.Black),
                     _centerX * pictureBox2.Width / _imgOri.Width - 10,
                     _centerY * pictureBox2.Height / _imgOri.Height - 10,
@@ -298,17 +349,6 @@ namespace ImagePro
                     (_centerY - _row) * pictureBox2.Height / _imgOri.Height,
                     2 * _row * pictureBox2.Width / _imgOri.Width,
                     2 * _row * pictureBox2.Height / _imgOri.Height);
-                _g.DrawEllipse(new Pen(Color.Black, 3),
-                    (_centerX - _row) * pictureBox2.Width / _imgOri.Width - 1,
-                    (_centerY - _row) * pictureBox2.Height / _imgOri.Height - 1,
-                    2 * _row * pictureBox2.Width / _imgOri.Width + 2,
-                    2 * _row * pictureBox2.Height / _imgOri.Height + 2);
-                _g.DrawEllipse(new Pen(Color.Black, 3),
-                    (_centerX - _row) * pictureBox2.Width / _imgOri.Width - 2,
-                    (_centerY - _row) * pictureBox2.Height / _imgOri.Height - 2,
-                    2 * _row * pictureBox2.Width / _imgOri.Width + 4,
-                    2 * _row * pictureBox2.Height / _imgOri.Height + 4);
-                pictureBox2.Update();
             }
         }
 
@@ -490,5 +530,93 @@ namespace ImagePro
         }
 
         #endregion kernel
+
+        private void trackBar5_Scroll(object sender, EventArgs e)
+        {
+            label7.Text = "Column Interval: " + trackBar5.Value;
+            if (_status == 3)
+            {
+                pictureBox2.Image = _imgOri;
+                pictureBox2.Update();
+                for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+                for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+                for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+                for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+            }
+        }
+
+        private void trackBar6_Scroll(object sender, EventArgs e)
+        {
+            label6.Text = "Row Interval: " + trackBar6.Value;
+            if (_status == 3)
+            {
+                pictureBox2.Image = _imgOri;
+                pictureBox2.Update();
+                for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+                for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+                for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+                for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+            }
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            _status = 3;
+            button1.Enabled = false;
+            button2.Enabled = false;
+            button3.Enabled = false;
+            button4.Enabled = false;
+            button5.Enabled = false;
+            button6.Enabled = false;
+            for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
+                for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
+                    _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                        j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+            for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
+                for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
+                    _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                        j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+            for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
+                for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
+                    _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                        j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+            for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
+                for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
+                    _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                        j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+        }
     }
 }
