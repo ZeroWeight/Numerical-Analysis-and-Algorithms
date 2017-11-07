@@ -28,6 +28,7 @@ namespace ImagePro
         private static Graphics _g;
 
         private static int[,,] _point;
+        private static int[,,] _basepoint;
         private static int _selectedX = -1, _selectedY = -1;
 
         #endregion element
@@ -199,6 +200,7 @@ namespace ImagePro
             groupBox6.Update();
             progressBar1.Update();
             for (int i = 0; i < _imgOri.Height; ++i)
+            {
                 for (int j = 0; j < _imgOri.Width; ++j)
                 {
                     double cx = i - _centerX;
@@ -231,10 +233,14 @@ namespace ImagePro
                     }
                     progressBar1.Value = 100 * (i * _imgOri.Width + j)
                                          / _imgOri.Width / _imgOri.Height;
-                    groupBox6.Text = "Processing: " + progressBar1.Value + "%";
-                    groupBox6.Update();
                     progressBar1.Update();
                 }
+                if (i % 100 == 0)
+                {
+                    groupBox6.Text = "Processing: " + progressBar1.Value + "%";
+                    groupBox6.Update();
+                }
+            }
 
             pictureBox2.Image = _imgDes;
             pictureBox2.Update();
@@ -350,6 +356,19 @@ namespace ImagePro
                         }
                         xdl += bx;
                     }
+                    _basepoint = new int[ax / bx + (lx - ax) / bx + 3, ay / by + (ly - ay) / by + 3, 2];
+                    xdl = ax - (ax / bx + 1) * bx;
+                    for (int i = 0; i < ax / bx + (lx - ax) / bx + 3; ++i)
+                    {
+                        int ydl = ay - (ay / by + 1) * by;
+                        for (int j = 0; j < ay / by + (ly - ay) / by + 3; ++j)
+                        {
+                            _basepoint[i, j, 0] = xdl;
+                            _basepoint[i, j, 1] = ydl;
+                            ydl += by;
+                        }
+                        xdl += bx;
+                    }
                 }
                 int ttyx = e.X * _imgOri.Width / pictureBox2.Width;
                 int ttyy = e.Y * _imgOri.Height / pictureBox2.Height;
@@ -428,7 +447,63 @@ namespace ImagePro
             _pressdown = false;
             if (_status == 3)
             {
-                ;//do something
+                //do something
+                progressBar1.Value = 0;
+                groupBox6.Text = "Processing: " + progressBar1.Value + "%";
+                int order = 1;
+                for (int i = 0; i < _imgOri.Width; ++i)
+                {
+                    for (int j = 0; j < _imgOri.Height; ++j)
+                    {
+                        double currX = i - _imgOri.Width / 2;
+                        double currY = j - _imgOri.Height / 2;
+                        for (int count = 0; count < 10; ++count)
+                        {
+                            double u = currX / trackBar6.Value - Math.Floor(currX / trackBar6.Value);
+                            double v = currY / trackBar5.Value - Math.Floor(currY / trackBar5.Value);
+                            int ip = (int)Math.Floor(currX / trackBar6.Value) - (order / 2);
+                            int jp = (int)Math.Floor(currY / trackBar5.Value) - (order / 2);
+
+                            double disX = 0;
+                            double disY = 0;
+                            for (int k = 0; k <= order; ++k)
+                                for (int l = 0; l <= order; ++l)
+                                {
+                                    double T = CalcBaseLinear(k, u) * CalcBaseLinear(l, v);
+                                    double tx = 0;
+                                    double ty = 0;
+                                    int ai = ip + k + _imgOri.Width / 2 / trackBar6.Value + 1;
+                                    int aj = jp + l + _imgOri.Height / 2 / trackBar5.Value + 1;
+                                    if (ai >= 0 && ai < _point.GetLength(0) && aj >= 0 && aj < _point.GetLength(1))
+                                    {
+                                        tx = _point[ai, aj, 0] - _basepoint[ai, aj, 0];
+                                        ty = _point[ai, aj, 1] - _basepoint[ai, aj, 1];
+                                    }
+                                    disX += T * tx;
+                                    disY += T * ty;
+                                }
+                            double diffX = currX + disX - i + _imgOri.Width / 2;
+                            double diffY = currY + disY - j + _imgOri.Height / 2;
+                            if (Math.Max(Math.Abs(diffX), Math.Abs(diffY)) < 2) break;
+
+                            currX -= diffX;
+                            currY -= diffY;
+                        }
+                        _imgDes.SetPixel(i, j, Nearest(currX + _imgOri.Width / 2, currY + _imgOri.Height / 2));
+                        progressBar1.Value = 100 * (i * _imgOri.Width + j)
+                                             / _imgOri.Width / _imgOri.Height;
+                    }
+                    if (i % 100 == 0)
+                    {
+                        groupBox6.Text = "Processing: " + progressBar1.Value + "%";
+                        groupBox6.Update();
+                    }
+                }
+                pictureBox2.Image = _imgDes;
+                pictureBox2.Update();
+                progressBar1.Value = 100;
+                groupBox6.Text = "Ready";
+                groupBox6.Update();
             }
         }
 
