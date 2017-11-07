@@ -8,6 +8,8 @@ namespace ImagePro
 {
     public partial class Form1 : Form
     {
+        #region element
+
         private static Bitmap _imgOri;
         private static Bitmap _imgDes;
         private static int _centerX;
@@ -24,7 +26,11 @@ namespace ImagePro
         private static short _cosStatus = 0;
         private static bool _pressdown = false;
         private static Graphics _g;
+
         private static int[,,] _point;
+        private static int _selectedX = -1, _selectedY = -1;
+
+        #endregion element
 
         public Form1()
         {
@@ -44,7 +50,7 @@ namespace ImagePro
             button6.Enabled = false;
             button7.Enabled = false;
             label1.Text = "Rotation angle: " + trackBar1.Value;
-            label2.Text = "Ready";
+            groupBox6.Text = "Ready";
             label3.Text = "distortion amplitude " + (double)trackBar2.Value / 100.0;
             label4.Text = "wave length " + (double)trackBar3.Value;
             label5.Text = "initial distortion " + (double)trackBar4.Value / 100.0;
@@ -99,6 +105,36 @@ namespace ImagePro
             pictureBox2.Image = _imgOri;
         }
 
+        private void button7_Click(object sender, EventArgs e)
+        {
+            _status = 3;
+            button1.Enabled = false;
+            button2.Enabled = false;
+            button3.Enabled = false;
+            button4.Enabled = false;
+            button5.Enabled = false;
+            button6.Enabled = false;
+            for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
+                for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
+                    _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                        j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+            for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
+                for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
+                    _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                        j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+            for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
+                for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
+                    _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                        j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+            for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
+                for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
+                    _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                        j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+        }
+
         #endregion button
 
         #region method
@@ -108,8 +144,8 @@ namespace ImagePro
             _theta = trackBar1.Value * Math.PI / 180;
             trackBar1.Enabled = false;
             progressBar1.Value = 0;
-            label2.Text = "Processing: " + progressBar1.Value + "%";
-            label2.Update();
+            groupBox6.Text = "Processing: " + progressBar1.Value + "%";
+            groupBox6.Update();
             progressBar1.Update();
             for (int i = 0; i < _imgOri.Height; ++i)
                 for (int j = 0; j < _imgOri.Width; ++j)
@@ -135,7 +171,7 @@ namespace ImagePro
                             oy = _centerY;
                         }
                         if (radioButton1.Checked) _imgDes.SetPixel(i, j, Nearest(ox, oy));
-                        else if (radioButton2.Checked) _imgDes.SetPixel(i, j, BiLine(ox, oy));
+                        else if (radioButton2.Checked) _imgDes.SetPixel(i, j, BiLinear(ox, oy));
                         else if (radioButton3.Checked) _imgDes.SetPixel(i, j, BiCubic(ox, oy));
                     }
                     else
@@ -144,8 +180,8 @@ namespace ImagePro
                     }
                     progressBar1.Value = 100 * (i * _imgOri.Width + j)
                         / _imgOri.Width / _imgOri.Height;
-                    label2.Text = "Processing: " + progressBar1.Value + "%";
-                    label2.Update();
+                    groupBox6.Text = "Processing: " + progressBar1.Value + "%";
+                    groupBox6.Update();
                     progressBar1.Update();
                 }
             pictureBox2.Image = _imgDes;
@@ -159,8 +195,8 @@ namespace ImagePro
             _p = trackBar3.Value;
             _phi = trackBar4.Value / 100.0;
             progressBar1.Value = 0;
-            label2.Text = "Processing: " + progressBar1.Value + "%";
-            label2.Update();
+            groupBox6.Text = "Processing: " + progressBar1.Value + "%";
+            groupBox6.Update();
             progressBar1.Update();
             for (int i = 0; i < _imgOri.Height; ++i)
                 for (int j = 0; j < _imgOri.Width; ++j)
@@ -186,7 +222,7 @@ namespace ImagePro
                             oy = _centerY;
                         }
                         if (radioButton1.Checked) _imgDes.SetPixel(i, j, Nearest(ox, oy));
-                        else if (radioButton2.Checked) _imgDes.SetPixel(i, j, BiLine(ox, oy));
+                        else if (radioButton2.Checked) _imgDes.SetPixel(i, j, BiLinear(ox, oy));
                         else if (radioButton3.Checked) _imgDes.SetPixel(i, j, BiCubic(ox, oy));
                     }
                     else
@@ -195,8 +231,8 @@ namespace ImagePro
                     }
                     progressBar1.Value = 100 * (i * _imgOri.Width + j)
                                          / _imgOri.Width / _imgOri.Height;
-                    label2.Text = "Processing: " + progressBar1.Value + "%";
-                    label2.Update();
+                    groupBox6.Text = "Processing: " + progressBar1.Value + "%";
+                    groupBox6.Update();
                     progressBar1.Update();
                 }
 
@@ -268,8 +304,8 @@ namespace ImagePro
                 button6.Enabled = true;
                 button7.Enabled = true;
                 progressBar1.Value = 100;
-                label2.Text = "Ready";
-                label2.Update();
+                groupBox6.Text = "Ready";
+                groupBox6.Update();
                 progressBar1.Update();
             }
             else if (_status == 2 && _cosStatus == 1)
@@ -285,48 +321,60 @@ namespace ImagePro
                 button6.Enabled = true;
                 button7.Enabled = true;
                 progressBar1.Value = 100;
-                label2.Text = "Ready";
-                label2.Update();
+                groupBox6.Text = "Ready";
+                groupBox6.Update();
                 progressBar1.Update();
             }
             else if (_status == 3)
             {
-                trackBar5.Enabled = false;
-                trackBar6.Enabled = false;
                 int lx = _imgOri.Width;
                 int ax = lx / 2;
                 int ly = _imgOri.Height;
                 int ay = ly / 2;
                 int bx = trackBar6.Value;
                 int by = trackBar5.Value;
-                _point = new int[ax / bx + (lx - ax) / bx + 3, ay / by + (ly - ay) / by + 3, 2];
-                int xdl = ax - (ax / bx + 1) * bx;
+                if (trackBar5.Enabled)
+                {
+                    trackBar5.Enabled = false;
+                    trackBar6.Enabled = false;
+                    _point = new int[ax / bx + (lx - ax) / bx + 3, ay / by + (ly - ay) / by + 3, 2];
+                    int xdl = ax - (ax / bx + 1) * bx;
+                    for (int i = 0; i < ax / bx + (lx - ax) / bx + 3; ++i)
+                    {
+                        int ydl = ay - (ay / by + 1) * by;
+                        for (int j = 0; j < ay / by + (ly - ay) / by + 3; ++j)
+                        {
+                            _point[i, j, 0] = xdl;
+                            _point[i, j, 1] = ydl;
+                            ydl += by;
+                        }
+                        xdl += bx;
+                    }
+                }
+                int ttyx = e.X * _imgOri.Width / pictureBox2.Width;
+                int ttyy = e.Y * _imgOri.Height / pictureBox2.Height;
+                int min = Int32.MaxValue;
                 for (int i = 0; i < ax / bx + (lx - ax) / bx + 3; ++i)
                 {
-                    int ydl = ay - (ay / by + 1) * by;
                     for (int j = 0; j < ay / by + (ly - ay) / by + 3; ++j)
                     {
-                        _point[i, j, 0] = xdl;
-                        _point[i, j, 1] = ydl;
-                        ydl += by;
+                        if ((ttyx - _point[i, j, 0]) * (ttyx - _point[i, j, 0]) +
+                            (ttyy - _point[i, j, 1]) * (ttyy - _point[i, j, 1]) < min)
+                        {
+                            min = (ttyx - _point[i, j, 0]) * (ttyx - _point[i, j, 0]) +
+                                  (ttyy - _point[i, j, 1]) * (ttyy - _point[i, j, 1]);
+                            _selectedX = i;
+                            _selectedY = j;
+                        }
                     }
-                    xdl += bx;
                 }
-                int ttyx = e.X * _imgOri.Width / pictureBox2.Width - _point[0, 0, 0];
-                int ttyy = e.Y * _imgOri.Height / pictureBox2.Height - _point[0, 0, 1];
-                int sardinex = (int)(1.0 * ttyx / bx + 0.5);
-                int sardiney = (int)(1.0 * ttyy / by + 0.5);
-                if (sardinex == 0) sardinex = 1;
-                if (sardiney == 0) sardiney = 1;
-                if (sardinex == ax / bx + (lx - ax) / bx + 2) sardinex -= 1;
-                if (sardiney == ay / by + (ly - ay) / by + 2) sardiney -= 1;
                 _g.FillEllipse(new SolidBrush(Color.Red),
-                    _point[sardinex, sardiney, 0] * pictureBox2.Width / _imgOri.Width - 5,
-                    _point[sardinex, sardiney, 1] * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+                    _point[_selectedX, _selectedY, 0] * pictureBox2.Width / _imgOri.Width - 5,
+                    _point[_selectedX, _selectedY, 1] * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
                 Point dl = Cursor.Position;
                 Cursor.Position = new Point(
-                    _point[sardinex, sardiney, 0] * pictureBox2.Width / _imgOri.Width - e.X + dl.X,
-                    _point[sardinex, sardiney, 1] * pictureBox2.Height / _imgOri.Height - e.Y + dl.Y
+                    _point[_selectedX, _selectedY, 0] * pictureBox2.Width / _imgOri.Width - e.X + dl.X,
+                    _point[_selectedX, _selectedY, 1] * pictureBox2.Height / _imgOri.Height - e.Y + dl.Y
                     );
             }
         }
@@ -350,11 +398,38 @@ namespace ImagePro
                     2 * _row * pictureBox2.Width / _imgOri.Width,
                     2 * _row * pictureBox2.Height / _imgOri.Height);
             }
+            if (_status == 3 && _pressdown)
+            {
+                pictureBox2.Image = _imgOri;
+                pictureBox2.Update();
+                _point[_selectedX, _selectedY, 0] = e.X * _imgOri.Width / pictureBox2.Width;
+                _point[_selectedX, _selectedY, 1] = e.Y * _imgOri.Height / pictureBox2.Height;
+                for (int i = 0; i < _point.GetLength(0); ++i)
+                    for (int j = 0; j < _point.GetLength(1); ++j)
+                    {
+                        if (i == _selectedX && j == _selectedY)
+                        {
+                            _g.FillEllipse(new SolidBrush(Color.Red),
+                                _point[i, j, 0] * pictureBox2.Width / _imgOri.Width - 5,
+                                _point[i, j, 1] * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+                        }
+                        else
+                        {
+                            _g.FillEllipse(new SolidBrush(Color.Black),
+                                _point[i, j, 0] * pictureBox2.Width / _imgOri.Width - 5,
+                                _point[i, j, 1] * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+                        }
+                    }
+            }
         }
 
         private void MouseUp(object sender, MouseEventArgs e)
         {
             _pressdown = false;
+            if (_status == 3)
+            {
+                ;//do something
+            }
         }
 
         #endregion mouse
@@ -379,6 +454,64 @@ namespace ImagePro
         private void trackBar4_Scroll(object sender, EventArgs e)
         {
             label5.Text = "initial distortion " + (double)trackBar4.Value / 100.0;
+        }
+
+        private void trackBar5_Scroll(object sender, EventArgs e)
+        {
+            label7.Text = "Column Interval: " + trackBar5.Value;
+            if (_status == 3)
+            {
+                pictureBox2.Image = _imgOri;
+                pictureBox2.Update();
+                for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+                for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+                for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+                for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+            }
+        }
+
+        private void trackBar6_Scroll(object sender, EventArgs e)
+        {
+            label6.Text = "Row Interval: " + trackBar6.Value;
+            if (_status == 3)
+            {
+                pictureBox2.Image = _imgOri;
+                pictureBox2.Update();
+                for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+                for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+                for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+
+                for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
+                    for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
+                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
+                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+            }
         }
 
         #endregion trackBar
@@ -451,7 +584,7 @@ namespace ImagePro
             return Color.FromArgb((int)y1[3], (int)y1[2], (int)y1[1], (int)y1[0]);
         }
 
-        private Color BiLine(double x, double y)
+        private Color BiLinear(double x, double y)
         {
             int[] arr = new int[4];
             int[] cor_x = new int[2];
@@ -529,94 +662,42 @@ namespace ImagePro
             else return _imgOri.GetPixel(nearX, nearY);
         }
 
+        private double CalcBaseLinear(int i, double t)
+        {
+            switch (i)
+            {
+                case 0:
+                    return 1 - t;
+
+                case 1:
+                    return t;
+
+                default:
+                    throw new IndexOutOfRangeException();
+            }
+        }
+
+        private double CalcBaseCubic(int i, double t)
+        {
+            switch (i)
+            {
+                case 0:
+                    return (1 + t * (-3 + t * (3 + t * (-1)))) / 6;
+
+                case 1:
+                    return (4 + t * t * (-6 + t * 3)) / 6;
+
+                case 2:
+                    return (1 + t * (3 + t * (3 + t * (-3)))) / 6;
+
+                case 3:
+                    return t * t * t / 6;
+
+                default:
+                    throw new IndexOutOfRangeException();
+            }
+        }
+
         #endregion kernel
-
-        private void trackBar5_Scroll(object sender, EventArgs e)
-        {
-            label7.Text = "Column Interval: " + trackBar5.Value;
-            if (_status == 3)
-            {
-                pictureBox2.Image = _imgOri;
-                pictureBox2.Update();
-                for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
-                    for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
-                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
-                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
-
-                for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
-                    for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
-                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
-                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
-
-                for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
-                    for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
-                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
-                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
-
-                for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
-                    for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
-                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
-                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
-            }
-        }
-
-        private void trackBar6_Scroll(object sender, EventArgs e)
-        {
-            label6.Text = "Row Interval: " + trackBar6.Value;
-            if (_status == 3)
-            {
-                pictureBox2.Image = _imgOri;
-                pictureBox2.Update();
-                for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
-                    for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
-                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
-                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
-
-                for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
-                    for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
-                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
-                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
-
-                for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
-                    for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
-                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
-                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
-
-                for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
-                    for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
-                        _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
-                            j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
-            }
-        }
-
-        private void button7_Click(object sender, EventArgs e)
-        {
-            _status = 3;
-            button1.Enabled = false;
-            button2.Enabled = false;
-            button3.Enabled = false;
-            button4.Enabled = false;
-            button5.Enabled = false;
-            button6.Enabled = false;
-            for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
-                for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
-                    _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
-                        j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
-
-            for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
-                for (int j = _imgOri.Height / 2; j < _imgOri.Height; j += trackBar5.Value)
-                    _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
-                        j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
-
-            for (int i = _imgOri.Width / 2; i < _imgOri.Width; i += trackBar6.Value)
-                for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
-                    _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
-                        j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
-
-            for (int i = _imgOri.Width / 2; i >= 0; i -= trackBar6.Value)
-                for (int j = _imgOri.Height / 2; j >= 0; j -= trackBar5.Value)
-                    _g.FillEllipse(new SolidBrush(Color.Black), i * pictureBox2.Width / _imgOri.Width - 5,
-                        j * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
-        }
     }
 }
