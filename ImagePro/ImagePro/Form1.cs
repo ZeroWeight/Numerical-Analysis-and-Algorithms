@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace ImagePro
@@ -39,8 +40,6 @@ namespace ImagePro
             InitializeComponent();
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
-            pictureBox1.BorderStyle = BorderStyle.FixedSingle;
-            pictureBox2.BorderStyle = BorderStyle.FixedSingle;
             openFileDialog1.SupportMultiDottedExtensions = false;
             openFileDialog1.Filter = filter;
             saveFileDialog1.Filter = filter;
@@ -57,6 +56,11 @@ namespace ImagePro
             label5.Text = "initial distortion " + (double)trackBar4.Value / 100.0;
             _g = pictureBox2.CreateGraphics();
             radioButton1.Checked = true;
+            radioButton4.Checked = true;
+            FormBorderStyle = FormBorderStyle.None;
+            BackColor = Color.LightBlue;
+            MinimumSize = Size;
+            MaximumSize = Size;
         }
 
         #region button
@@ -102,8 +106,8 @@ namespace ImagePro
 
         private void button6_Click(object sender, EventArgs e)
         {
-            _imgDes = _imgOri;
-            pictureBox2.Image = _imgOri;
+            _imgDes = (Bitmap)pictureBox1.Image.Clone();
+            pictureBox2.Image = _imgDes;
         }
 
         private void button7_Click(object sender, EventArgs e)
@@ -149,6 +153,7 @@ namespace ImagePro
             groupBox6.Update();
             progressBar1.Update();
             for (int i = 0; i < _imgOri.Height; ++i)
+            {
                 for (int j = 0; j < _imgOri.Width; ++j)
                 {
                     double cx = i - _centerX;
@@ -180,11 +185,15 @@ namespace ImagePro
                         _imgDes.SetPixel(i, j, _imgOri.GetPixel(i, j));
                     }
                     progressBar1.Value = 100 * (i * _imgOri.Width + j)
-                        / _imgOri.Width / _imgOri.Height;
+                                         / _imgOri.Width / _imgOri.Height;
+                }
+                if (i % 100 == 0)
+                {
                     groupBox6.Text = "Processing: " + progressBar1.Value + "%";
                     groupBox6.Update();
-                    progressBar1.Update();
                 }
+            }
+
             pictureBox2.Image = _imgDes;
             pictureBox2.Update();
             trackBar1.Enabled = true;
@@ -273,7 +282,7 @@ namespace ImagePro
 
         #region mouse
 
-        private void MouseDown(object sender, MouseEventArgs e)
+        private void _MouseDown(object sender, MouseEventArgs e)
         {
             _pressdown = true;
             if (_status != 0 && e.Button == MouseButtons.Right)
@@ -283,10 +292,12 @@ namespace ImagePro
                 button2.Enabled = true;
                 button3.Enabled = true;
                 button4.Enabled = true;
+                button5.Enabled = true;
+                button6.Enabled = true;
                 button7.Enabled = true;
                 trackBar5.Enabled = true;
                 trackBar6.Enabled = true;
-                pictureBox2.Image = _imgOri;
+                pictureBox2.Image = _imgDes;
                 pictureBox2.Update();
                 _cosStatus = 0;
             }
@@ -356,19 +367,7 @@ namespace ImagePro
                         }
                         xdl += bx;
                     }
-                    _basepoint = new int[ax / bx + (lx - ax) / bx + 3, ay / by + (ly - ay) / by + 3, 2];
-                    xdl = ax - (ax / bx + 1) * bx;
-                    for (int i = 0; i < ax / bx + (lx - ax) / bx + 3; ++i)
-                    {
-                        int ydl = ay - (ay / by + 1) * by;
-                        for (int j = 0; j < ay / by + (ly - ay) / by + 3; ++j)
-                        {
-                            _basepoint[i, j, 0] = xdl;
-                            _basepoint[i, j, 1] = ydl;
-                            ydl += by;
-                        }
-                        xdl += bx;
-                    }
+                    _basepoint = (int[,,])_point.Clone();
                 }
                 int ttyx = e.X * _imgOri.Width / pictureBox2.Width;
                 int ttyy = e.Y * _imgOri.Height / pictureBox2.Height;
@@ -395,10 +394,15 @@ namespace ImagePro
                     _point[_selectedX, _selectedY, 0] * pictureBox2.Width / _imgOri.Width - e.X + dl.X,
                     _point[_selectedX, _selectedY, 1] * pictureBox2.Height / _imgOri.Height - e.Y + dl.Y
                     );
+                progressBar1.Value = 100;
+                groupBox6.Text = "Ready";
+                groupBox6.Update();
+                progressBar1.Update();
+                _basepoint = (int[,,])_point.Clone();
             }
         }
 
-        private void MouseMove(object sender, MouseEventArgs e)
+        private void _MouseMove(object sender, MouseEventArgs e)
         {
             if ((_status == 1 || _status == 2) && _cosStatus == 1)
             {
@@ -419,7 +423,7 @@ namespace ImagePro
             }
             if (_status == 3 && _pressdown)
             {
-                pictureBox2.Image = _imgOri;
+                pictureBox2.Image = _imgDes;
                 pictureBox2.Update();
                 _point[_selectedX, _selectedY, 0] = e.X * _imgOri.Width / pictureBox2.Width;
                 _point[_selectedX, _selectedY, 1] = e.Y * _imgOri.Height / pictureBox2.Height;
@@ -442,7 +446,7 @@ namespace ImagePro
             }
         }
 
-        private void MouseUp(object sender, MouseEventArgs e)
+        private void _MouseUp(object sender, MouseEventArgs e)
         {
             _pressdown = false;
             if (_status == 3)
@@ -451,6 +455,8 @@ namespace ImagePro
                 progressBar1.Value = 0;
                 groupBox6.Text = "Processing: " + progressBar1.Value + "%";
                 int order = 1;
+                if (radioButton5.Checked)
+                    order = 3;
                 for (int i = 0; i < _imgOri.Width; ++i)
                 {
                     for (int j = 0; j < _imgOri.Height; ++j)
@@ -469,7 +475,11 @@ namespace ImagePro
                             for (int k = 0; k <= order; ++k)
                                 for (int l = 0; l <= order; ++l)
                                 {
-                                    double T = CalcBaseLinear(k, u) * CalcBaseLinear(l, v);
+                                    double T;
+                                    if (radioButton4.Checked)
+                                        T = CalcBaseLinear(k, u) * CalcBaseLinear(l, v);
+                                    else
+                                        T = CalcBaseCubic(k, u) * CalcBaseCubic(l, v);
                                     double tx = 0;
                                     double ty = 0;
                                     int ai = ip + k + _imgOri.Width / 2 / trackBar6.Value + 1;
@@ -489,7 +499,12 @@ namespace ImagePro
                             currX -= diffX;
                             currY -= diffY;
                         }
-                        _imgDes.SetPixel(i, j, Nearest(currX + _imgOri.Width / 2, currY + _imgOri.Height / 2));
+                        if (radioButton1.Checked)
+                            _imgDes.SetPixel(i, j, Nearest(currX + _imgOri.Width / 2, currY + _imgOri.Height / 2));
+                        else if (radioButton2.Checked)
+                            _imgDes.SetPixel(i, j, BiLinear(currX + _imgOri.Width / 2, currY + _imgOri.Height / 2));
+                        else if (radioButton3.Checked)
+                            _imgDes.SetPixel(i, j, BiCubic(currX + _imgOri.Width / 2, currY + _imgOri.Height / 2));
                         progressBar1.Value = 100 * (i * _imgOri.Width + j)
                                              / _imgOri.Width / _imgOri.Height;
                     }
@@ -499,11 +514,19 @@ namespace ImagePro
                         groupBox6.Update();
                     }
                 }
+                _imgOri = (Bitmap)_imgDes.Clone();
                 pictureBox2.Image = _imgDes;
                 pictureBox2.Update();
                 progressBar1.Value = 100;
                 groupBox6.Text = "Ready";
                 groupBox6.Update();
+                for (int i = 0; i < _point.GetLength(0); ++i)
+                    for (int j = 0; j < _point.GetLength(1); ++j)
+                    {
+                        _g.FillEllipse(new SolidBrush(Color.Black),
+                            _point[i, j, 0] * pictureBox2.Width / _imgOri.Width - 5,
+                            _point[i, j, 1] * pictureBox2.Height / _imgOri.Height - 5, 10, 10);
+                    }
             }
         }
 
@@ -774,5 +797,37 @@ namespace ImagePro
         }
 
         #endregion kernel
+
+        #region UI
+
+        [DllImportAttribute("user32.dll")]
+        private static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+
+        [DllImportAttribute("user32.dll")]
+        private static extern bool ReleaseCapture();
+
+        private const int WmNclbuttondown = 0xA1;
+        private const int HtCaption = 0x2;
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            this.WindowState = FormWindowState.Minimized;
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void MainForm_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                ReleaseCapture();
+                SendMessage(Handle, WmNclbuttondown, HtCaption, 0);
+            }
+        }
+
+        #endregion UI
     }
 }

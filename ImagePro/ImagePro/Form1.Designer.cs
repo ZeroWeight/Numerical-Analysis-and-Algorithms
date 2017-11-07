@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System.Drawing;
+using System.Windows.Forms;
 
 namespace ImagePro
 {
@@ -31,6 +32,7 @@ namespace ImagePro
         private void InitializeComponent()
         {
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            pictureBox1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.button1 = new System.Windows.Forms.Button();
@@ -38,35 +40,52 @@ namespace ImagePro
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.button4 = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
+            label1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            progressBar1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.trackBar2 = new System.Windows.Forms.TrackBar();
             this.trackBar3 = new System.Windows.Forms.TrackBar();
             this.trackBar4 = new System.Windows.Forms.TrackBar();
             this.label3 = new System.Windows.Forms.Label();
+            label3.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.label4 = new System.Windows.Forms.Label();
+            label4.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.label5 = new System.Windows.Forms.Label();
+            label5.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.button5 = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
             this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.radioButton3 = new System.Windows.Forms.RadioButton();
             this.label6 = new System.Windows.Forms.Label();
+            label6.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.label7 = new System.Windows.Forms.Label();
+            label7.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.trackBar5 = new System.Windows.Forms.TrackBar();
             this.trackBar6 = new System.Windows.Forms.TrackBar();
             this.button7 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.trackBar1 = new System.Windows.Forms.TrackBar();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            groupBox1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            groupBox2.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            groupBox3.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            groupBox4.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.groupBox5 = new System.Windows.Forms.GroupBox();
+            groupBox5.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.groupBox6 = new System.Windows.Forms.GroupBox();
+            groupBox6.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.groupBox7 = new System.Windows.Forms.GroupBox();
+            groupBox7.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.radioButton4 = new System.Windows.Forms.RadioButton();
             this.label2 = new System.Windows.Forms.Label();
+            label2.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
+            this.button8 = new System.Windows.Forms.Button();
+            this.button9 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar2)).BeginInit();
@@ -91,6 +110,7 @@ namespace ImagePro
             this.pictureBox1.Size = new System.Drawing.Size(330, 283);
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
+            this.pictureBox1.BorderStyle = BorderStyle.None;
             // 
             // pictureBox2
             // 
@@ -99,9 +119,10 @@ namespace ImagePro
             this.pictureBox2.Size = new System.Drawing.Size(513, 513);
             this.pictureBox2.TabIndex = 1;
             this.pictureBox2.TabStop = false;
-            this.pictureBox2.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MouseDown);
-            this.pictureBox2.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MouseMove);
-            this.pictureBox2.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MouseUp);
+            this.pictureBox2.BorderStyle = BorderStyle.None;
+            this.pictureBox2.MouseDown += new System.Windows.Forms.MouseEventHandler(this._MouseDown);
+            this.pictureBox2.MouseMove += new System.Windows.Forms.MouseEventHandler(this._MouseMove);
+            this.pictureBox2.MouseUp += new System.Windows.Forms.MouseEventHandler(this._MouseUp);
             // 
             // openFileDialog1
             // 
@@ -424,9 +445,9 @@ namespace ImagePro
             this.groupBox7.Controls.Add(this.label6);
             this.groupBox7.Controls.Add(this.trackBar6);
             this.groupBox7.Controls.Add(this.button7);
-            this.groupBox7.Location = new System.Drawing.Point(1065, 12);
+            this.groupBox7.Location = new System.Drawing.Point(1065, 162);
             this.groupBox7.Name = "groupBox7";
-            this.groupBox7.Size = new System.Drawing.Size(200, 445);
+            this.groupBox7.Size = new System.Drawing.Size(200, 295);
             this.groupBox7.TabIndex = 33;
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "B Spline";
@@ -456,17 +477,40 @@ namespace ImagePro
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(936, 473);
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label2.Location = new System.Drawing.Point(867, 463);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(51, 20);
+            this.label2.Size = new System.Drawing.Size(389, 58);
             this.label2.TabIndex = 34;
-            this.label2.Text = "label2";
+            this.label2.Text = "Numerical Analysis and Algorithms \r\nProj. 1                      By ZeroWeight ";
+            // 
+            // button8
+            // 
+            this.button8.Location = new System.Drawing.Point(1065, 38);
+            this.button8.Name = "button8";
+            this.button8.Size = new System.Drawing.Size(100, 46);
+            this.button8.TabIndex = 35;
+            this.button8.Text = "Minimize";
+            this.button8.UseVisualStyleBackColor = true;
+            this.button8.Click += new System.EventHandler(this.button8_Click);
+            // 
+            // button9
+            // 
+            this.button9.Location = new System.Drawing.Point(1171, 38);
+            this.button9.Name = "button9";
+            this.button9.Size = new System.Drawing.Size(100, 46);
+            this.button9.TabIndex = 36;
+            this.button9.Text = "Close";
+            this.button9.UseVisualStyleBackColor = true;
+            this.button9.Click += new System.EventHandler(this.button9_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1297, 544);
+            this.Controls.Add(this.button9);
+            this.Controls.Add(this.button8);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.groupBox7);
             this.Controls.Add(this.groupBox6);
@@ -479,6 +523,7 @@ namespace ImagePro
             this.Controls.Add(this.pictureBox1);
             this.Name = "Form1";
             this.Text = "Form1";
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseDown);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar2)).EndInit();
@@ -542,6 +587,8 @@ namespace ImagePro
         private RadioButton radioButton5;
         private RadioButton radioButton4;
         private Label label2;
+        private Button button8;
+        private Button button9;
     }
 }
 
