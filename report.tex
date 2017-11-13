@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{ctex}
 \usepackage{amsmath}
+\usepackage{amsfonts}
 \usepackage{pdfpages}
 \usepackage{graphicx}
 \usepackage{wrapfig}
@@ -156,7 +157,102 @@ B样条插值的主要困难是不方便像前两个问题一样顺利的解决�
     \EndFunction
 \end{algorithmic}\end{algorithm}
 \section{方案原理及误差分析}
-这里主要讨论的是使用插值方法的介绍与分析
-\section{实验结果分析}
+在通过合理的方式获得了逆变换的坐标之后，我们希望通过插值的方式利用逆变换点周围的若干点进行等间距插值。之所以采用
+逆变换之后插值，主要原因是这样变换之后可以利用等间距插值，不仅减少了算法的难度，而且提高了算法的精度。
 
+考察这个过程中可能出现的误差，可能来源于如下的几个可能性。
+\subsection{选取点，半径时的误差}
+由于选取中心点，半径的过程是用户手动选择的，在将鼠标位置映射到像素点坐标的过程中可能存在着一个像素的误差，这个误差主要
+出现在将用户的鼠标操作离散化的过程中。同样，选取半径的过程中也受到这个离散映射的过程中，即选取的半径只能表现为
+$r = \sqrt{n^2 + m^2},n \in \mathbb{Z}, m \in\mathbb{Z}$这样使得变化的半径可能不是作者指定的半径。确切的说，是
+需要变换的点在原图像上组成的集合并不是一个完美的圆，而是圆内像素的集合。
+\subsection{逆变换误差}
+这部分的误差，主要出现在对于双精度类型double的舍入误差上，显然，相对于后面几个计算的误差，这个误差相对较小，可以忽略。
+
+另一方面，如果我们采用B样条插值，寻找一个点的原像过程是采用一个简单的数值计算方式得到的，如果迭代次数足够大，
+选择原像的误差应当小于1，然而由于必须对迭代次数加以限制，这个误差的估计变得比较困难。然而，B样条曲线插值本身就是
+一个交互性很强的方式，很多操作主要依靠用户根据图形的样式加以调整，这种计算误差往往会被用户通过进一步的操作进行
+消除，因此，讨论这个误差的意义也不大。
+
+另外，由于尽可能避免极小数作为除数，使得计算过程中出现了病态，在中心点附近（往往是曼哈顿距离为1的那些点）直接避免了
+反算原始坐标点，而认为这个距离内的点变化后位置不变，显然，在保幅变换的情况下，这个变换的误差应当小于两个像素。而且
+这个误差仅仅存在于中心点周边，含中心点的5个像素中，因此这个误差在采用正常的图像，如Lena （512 *512像素）图像等问题
+时不足为虑。
+\subsection{插值过程}
+实验过程中，实现了最近邻插值，双线性插值，双三次插值三种插值算法。首先为了方便之后的叙述，我们将整幅图片定义为将二维向量
+映射为四维向量（R,G,B,A）的多元函数，设连续情况下图像可导，得到其Jacobi矩阵为
+$$J = \begin{pmatrix}J_{11} J_{12}\\ J_{21} J_{22}\\ J_{31} J_{32}\\ J_{41} J_{42}\end{pmatrix}$$ 
+并定义全微分形式为$\mathrm{d} y = J\mathrm{d} x$。对Jacobi矩阵每一个元素均取在二维向量定义域中的最大值得到梯度上界
+$\max J$我们认为照片的采集过程中每一个像素点都是准确的，即没有观测误差。这里逐一将其工作原理和误差简述如下
+\subsubsection{最近邻插值}
+最近邻插值就是选用距离目标点最近的插值节点的颜色作为插值节点的颜色，这是三种插值方式中最快的一种，也是相对误差最大的一种。
+由于给定的Lena等图片的分辨率仍较好，因此这种插值方式并没有出现明显的问题。
+
+由于没有任何计算过程，计算中的舍入误差就是像素点
+的舍入误差，由于像素点中的每一维颜色是$[0,255]$的整形，因此我们可以知道对每一种颜色的误差均为
+$\delta_1 = \begin{pmatrix}0.5 & 0.5 & 0.5 & 0.5 \end{pmatrix}^\mathrm{T}$。
+
+对于插值误差，我们可以很容易发现当目标点正好落到四个节点中间的时候误差最大，此时误差可以被表示为如式\ref{eq31}所示
+\begin{equation}\delta_2 = \max J\begin{pmatrix}0.5 \\ 0.5 \end{pmatrix}\label{eq31}\end{equation}
+
+两种误差做合成，得到插值的总误差为$\delta = \sqrt{\delta_1^2 + \delta_2^2}$，上述操作对于$\delta_i$的每一个元素进行。
+\subsubsection{双线性插值}
+双线性插值考虑的是目标点周围的四个节点，我们记这四个四个节点的对应值为$a_{00},a_{01},a_{10},a_{11}$，设目标点的小数部分
+$$t_x = x - \biggl\lfloor x\biggr\rfloor\qquad, t_y = y - \biggl\lfloor y\biggr\rfloor\qquad$$
+可以立即得到插值公式\ref{eq32}
+\begin{equation} t_y(t_xa_{11} + (1-t_x)a_{01}) + (1-t_y)(t_xa_{01} + (1-t_x)a_{00})\label{eq32}\end{equation}
+
+利用误差公式直接得到插值公式\ref{eq32}的舍入误差为\ref{eq33}所示。
+\begin{equation} \delta_1 = t_xt_y + t_y - t_xt_y + 1 + t_xt_y  - t_x - t_y -t_xt_y + t_x \Delta = 0.5
+\label{eq33}\end{equation}
+
+下面分析双线性插值的插值误差，为了方便起见，我们只对颜色维数的一维进行分析，其他维数同理。我们将整个二位平面强行分割成
+两个一维的直和。对两个方向上的二阶导数的最大值分别为$M_1,M_2$.对两个维度进行先后插值。参考书上结论得到在一维上进行插值的
+误差限为$\frac{M}{8}$,因此得到先后进行两次插值的误差为$\frac{M_1}{8} + \frac{M_2}{8}$，其中第一项为第二次插值的算法
+直接引入的误差项，第二项为第一次插值引入并按照误差传递公式传导的误差项。我们不妨记$M = \max\{M_1,M_2\}$，
+立即得到误差的表达式如\ref{eq34}所示。\begin{equation}\delta_2 = \frac{M}{4}\label{eq34}\end{equation}
+
+两种误差做合成，得到插值的总误差为$\delta = \sqrt{\delta_1^2 + \delta_2^2}$。
+\subsubsection{双三次插值}
+双三次插值相对于前两种插值方式，时间的损耗更大，但是插值的效果更好。具体的实现\footnote{参考了
+\url{https://stackoverflow.com/questions/20923956/bicubic-interpolation}并进行了修改}的思路我们可以通过
+算法\ref{a4}表示
+\begin{algorithm}[h]\caption{双三次插值}\label{a4}\begin{algorithmic}
+    \Require 周围的四个点的值$v_0,v_1,v_2,v_3$以及目标点的小数部分$frac$
+    \Ensure 插值结果$result$\end{algorithmic}\begin{algorithmic}[1]
+    \Function {三次插值Cubic}{$v_0,v_1,v_2,v_2,frac$}
+    \State $A = (v_3-v_2)-(v_0-v_1)$
+    \State $C = v_2 - v_0$
+    \State $D = v_1$
+    \State \Return $D + frac * (C + frac * (B + frac * A))$
+    \EndFunction\end{algorithmic}\begin{algorithmic}
+    \State \State \State
+    \Require 周围16个点的值$v_{00},\hdots,v_{33}$,插值位置小数部分$frac_x,frac_y$
+    \Ensure 双三次插值结果$result$\end{algorithmic}\begin{algorithmic}[1]
+    \Function {三次插值}{$v_{00},\hdots,v_{33},frac_x,frac_y$}
+    \For{i = 0;i < 4; ++i}
+        \State $v_i$ = Cubic($v_{i0},v_{i1},v_{i2},v_{i3},frac_y$)
+    \EndFor
+    \State \Return Cubic($v_0,v_1,v_2,v_2,frac_x$)
+    \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+类比双线性插值，可以得到双三次插值，这里的实现方式仍是先对一维进行分段三次插值，在对另一位进行三次插值。我们假设
+某一维颜色在两个维度上的四阶导数的共同最大值为$M$。同理立即得到两种误差的表达式如\ref{eq35}所示。
+\begin{equation}\begin{cases}
+\delta_1 = 0.5;\\
+\delta_2 = 2\frac{M}{384};\\
+\delta = \sqrt{\delta_1^2 + \delta_2^2}
+\end{cases}\end{equation}
+\subsubsection{三种插值方法的比较}
+我们可以明显的看出，双三次插值的精度要高于双线性插值，同时高于最近邻插值。同样道理，双三次插值的时间消耗也明显高于
+双线性插值，双线性插值的时间消耗也明显高过最近邻插值。在将图像扭曲——还原的实验中
+\footnote{即将图像顺时针旋转扭曲若干次之后在进行逆时针的反变换的操作}，双三次插值可以清晰的还原图像，而双线性插值
+则相对差一点，最近邻插值则出现了明显的图像虚化。这跟我们之前的理解也是符合的。
+\subsection{图像输出的误差}
+在进行了插值之后，我们需要将图像色彩归一化到$[0,255]$区间的整数，这中间包括取整所带来的误差，也包括上下限制所带来的
+误差，取整带来的误差仍为0.5个颜色单位，上下限制带来的误差没有意义讨论，这是因为实际图像中也不可能出现超过这个范围的
+数值。实际上，细致的讨论几种插值方法，均是周边几个点的线性组合，且他们的权重和为1，由于周边几个点均在$[0,255]$区间中，
+因此出现上限下限的点实际上不可能被插值函数获得，加入这一步仅仅是为了保证程序的运行安全，避免因为误计算导致程序崩溃。
+\section{实验结果分析}
 \end{document}
