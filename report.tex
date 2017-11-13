@@ -1,0 +1,162 @@
+\documentclass[UTF8,a4paper]{paper}
+\usepackage[utf8]{inputenc}
+\usepackage{ctex}
+\usepackage{amsmath}
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{listings}
+\usepackage{multicol}
+\usepackage{float}
+\usepackage{algorithm}  
+\usepackage{algorithmicx}  
+\usepackage{algpseudocode} 
+\usepackage{appendix}
+\usepackage{url}
+\title{\begin{large}数值分析第一次大作业\end{large}\\ 图像扭曲变形}
+\author{张蔚桐\ 2015011493\ 自55}
+\begin {document}
+\maketitle
+\tableofcontents
+\clearpage
+\section{方案设计与程序框图}
+整体的设计思路是，对于新图像上的每一个点，通过所选取变换的逆变换寻求原图像上的点。通过原图像的点进行等间隔插值，插值出
+要求点的颜色，最终返回渲染新图像。为了方便用户进行操作，相关变换，插值方式的选择和相关参数的选定应当在用户界面上友好的
+展示，整个程序的设计流程图如图\ref{fig1}所示，程序的开始截图如图\ref{fig2}所示。
+\begin{figure}[h]
+    \centering
+    \includegraphics[width = \textwidth]{1.pdf}
+    \caption{程序设计图}
+    \label{fig1}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width = \textwidth]{shot.jpg}
+    \caption{程序运行图}
+    \label{fig2}
+\end{figure}
+\section{变形函数的选取与设计}
+项目的需求是实现一个图像旋转，水波纹变化，以及通过B样条插值得到的图像修改的功能，因此要设计适当的变形函数来将图片进行变形。
+即通过某变换$f$使得原图像$I$被映射为新图像$I'$。通过后文的分析我们可以看出，具体实现的整体思路是将新图像中的每一个位置
+$\vec{p'}$通过寻找$f$的逆变换$f'$找到其在原图像中的位置$\vec{p}$，并通过插值确定颜色。
+因此工作的重心实际上在于对于逆变换$f'$的求取。下面将针对三种变形进行讨论。
+
+\subsection{图像旋转变换}
+作业要求中已经给了我们这个变换的正变换公式\ref{eq1}\footnote{这里修正了PPT中除2的错误}为
+\begin{equation}\begin{cases}\displaystyle{
+    x = r\cos(\alpha + \theta\frac{row - r}{row})} \\ \displaystyle{
+    y = r\sin(\alpha + \theta\frac{row - r}{row})
+}\end{cases}\label{eq1}\end{equation}
+因此我们的任务是寻找其逆变换，式\ref{eq1}的各个点坐标均是在以图片为中心的极坐标下取得的，因此我们可以看出这是一个保幅变换。
+因此我们可以迅速得到方程\ref{eq2}
+\begin{equation}\tan(\alpha + \theta\frac{row - r}{row}) = \frac{x}{y}\label{eq2}\end{equation}
+通过$x,y$的具体符号，我们可以很容易的得到$(\alpha + \theta\frac{row - r}{row})$的表达式，并进一步得到$\alpha$的值。
+具体的算法可以由算法\ref{a1}表示
+\begin{algorithm}[h]\caption{求新图位置$\vec{p'} = \{x',y'\}$在原图像中的位置}\label{a1}\begin{algorithmic}
+    \Require \\ 新图像中的绝对坐标位置$x',y'$\\ 变换原点的位置$x_c,y_c$\\ 参数$row,\theta$
+    \Ensure 原图像中的绝对坐标位置$x,y$\end{algorithmic}\begin{algorithmic}[1]
+    \Function {旋转扭曲逆变换}{$x',y',x_c,y_c,row,\theta$}
+    \State 计算新图像中相对$x_c,y_c$的相对位置$x_r' = x' - x_c, y_r' = y' - y_c$
+    \State 计算相对原点的距离$r = \sqrt{x_r'^2 + y_r'^2}$
+    \If {$r < 1$}
+        \State //说明点在变换原点附近，为防止模型病态
+        \State \Return{$x = x',y = y'$}
+    \EndIf
+    \State 计算$\phi = \arctan\frac{y_r'}{x_r'}$
+    \If {$y_r' < 0$}
+        \State $\phi = 2\pi - \phi$
+    \EndIf
+    \State 计算$\alpha = \phi - \theta\frac{row - r}{row}$
+    \State 计算$x = x_c + r\cos\alpha, y = y_c + r\sin\alpha$
+    \State 检查$x,y$是否在合法范围内
+    \State \Return $x,y$
+    \EndFunction
+\end{algorithmic}\end{algorithm}
+\subsection{水波纹变换}
+经过仔细的考察，发现作业中给出的公式\ref{eq11}存在着一定的问题，这里简述如下
+\begin{equation}\begin{cases}\displaystyle{
+    x = r\sin(\alpha + \sin(\frac{r}{R}\rho + \phi) + R} \\ \displaystyle{
+    y = r\cos(\alpha + \sin(\frac{r}{R}\rho + \phi) + R
+}\end{cases}\label{eq11}\end{equation}
+
+不论对公式进行如何修正\footnote{包括将$\sin,\cos$互换位置，将后面的$+R$项忽略等}
+，当变换点取在“最大变化半径”$R$之外时，变换后点位置不变，暂且记为极坐标形式$r,\alpha$,当变换点在内
+式，变换后的点位置发生改变，主要表现为角度发生了$\sin(\frac{r}{R}\rho + \phi)$的变化。因此，当变化点的幅值从两侧接近
+$R$的时候，变换后的点的幅值变化可以被式\ref{eq12}表征
+\begin{equation}\begin{cases}
+    \displaystyle{\lim_{r\rightarrow R^-} \Delta \angle{\vec{p}} = \sin(\rho + \phi) \ne 0} \\
+    \displaystyle{\lim_{r\rightarrow R^+} \Delta \angle{\vec{p}} = 0} 
+\label{eq12}\end{cases}\end{equation}
+所以这个变换在平面上面当$\sin{\rho + \phi} \ne 0$的情况下是不连续的，即不论采用怎样的变换方式，势必在$r = R$的圆上产生
+割痕。并且经过实验，取$\sin{\rho + \phi} = 0$加强条件也很难有较好的效果。因此放弃了采用推荐形式的方式。
+
+我们采用了开源图像处理库JHLabs\footnote{\url{http://www.jhlabs.com/ip/filters/index.html}}中的处理方式并加以改进。
+原算法的处理方式为，对于每一个在变换区域内的点，在他的幅（距离原点的长度）上加一个正弦项的扰动，即若原位置距离变换中心为$r$
+,新位置距离变换中心的距离为$(1+\omega)r$，其中$w$是一个随着$r$变换的幅值很小的扰动项，可以认为$\|w\| < 1$因此我们可以将变换
+$r' = (1+\omega) r,r = \frac{r'}{1+\omega}$近似为$r = (1+\omega')r'$，其中$\omega'$是另一个波动项，
+在一阶近似的情况下，$\omega' = -\omega$。不妨取$\omega' = A\sin(2\pi\frac{r}{\lambda}+\phi)$，其中$A$可以表征水波的
+振幅，$\lambda$可以表征水波的波长，$\phi$可以表征水波的初相位。采用这种方式，不仅可以克服在$r=R$圆上角度不连续的问题，
+而且引入的参数也更有物理意义。
+
+在JHLabs提供的实现算法思路的基础上，我们在每一个点的波动基础上加入衰减项，表现出波动振幅的衰减特性，具体表述将上式中的
+$r = (1 + \omega')r'$修正成为$r = (1 + \exp(-\frac{r}{\Lambda}) A\sin(2\pi\frac{r}{\lambda}+\phi))r'$，式中
+$\Lambda \equiv 0.2R$使得波动项在边界$R = r$处基本达到振幅为0，使得图像更平滑。
+
+和算法\ref{a1}类似的，我们也可以得到逆向计算波纹的算法如算法\ref{a2}所示。
+\begin{algorithm}[h]\caption{求新图位置$\vec{p'} = \{x',y'\}$在原图像中的位置}\label{a2}\begin{algorithmic}
+    \Require \\ 新图像中的绝对坐标位置$x',y'$\\ 变换原点的位置$x_c,y_c$\\ 参数$\lambda,\phi,R,A$
+    \Ensure 原图像中的绝对坐标位置$x,y$\end{algorithmic}\begin{algorithmic}[1]
+    \Function {图像水波纹变换}{$x',y',x_c,y_c,\lambda,\phi,R,A$}
+    \State 计算新图像中相对$x_c,y_c$的相对位置$x_r' = x' - x_c, y_r' = y' - y_c$
+    \State 计算相对原点的距离$r' = \sqrt{x_r'^2 + y_r'^2}$
+    \State 计算衰减波动因子$\Omega = A\exp(-\frac{5r'}{R})\sin(2\pi\frac{r'}{\lambda}+\phi)$
+    \State 计算$x = x_r + x_c = x_r'(1+\Omega) + x_c,y = y_r + y_c = y_r'(1+\Omega) + y_c$
+    \State 检查$x,y$是否在合法范围内
+    \State \Return $x,y$
+    \EndFunction
+\end{algorithmic}\end{algorithm}
+
+\subsubsection{B 样条变换}
+从作业中给出的定义中我们可以知道，当控制点为$\vec{P}$的时候，我们可以得到二位图像中的每一个位置的位移如式\ref{eq21}
+\begin{equation}\begin{cases}
+    \displaystyle{ \Delta_x(x,y) = \sum_{l=0}^n\sum_{m=0}^n G_{l,n}(u)G_{m,n}(v)\Delta\vec{P}_{x(i+l,j+m)}} \\ 
+    \displaystyle{ \Delta_y(x,y) = \sum_{l=0}^n\sum_{m=0}^n G_{l,n}(u)G_{m,n}(v)\Delta\vec{P}_{y(i+l,j+m)}}
+\label{eq21}\end{cases}\end{equation}
+其中$n$为B样条的次数，$\Delta_x,\Delta_y$分别是原位置在$x,y$点的位移。$G_{\cdot,\cdot}(\cdot)$为B样条插值基函数。
+具体的表述形式作业中已经给的很全面了，这里略去。式中
+\begin{equation}\begin{cases}
+\displaystyle{u\equiv\frac{x}{N_x} - \biggl\lfloor\frac{x}{N_x}\biggr\rfloor\qquad,
+i\equiv\biggl\lfloor\frac{x}{N_x}\biggr\rfloor\qquad} \\ 
+\displaystyle{v\equiv\frac{y}{N_y} - \biggl\lfloor\frac{y}{N_y}\biggr\rfloor\qquad,
+j\equiv\biggl\lfloor\frac{y}{N_y}\biggr\rfloor\qquad} \\
+\end{cases}\end{equation}
+为了方便后文表述，我们记这个正变换为$F(x,y) \rightarrow (x',y')$
+
+B样条插值的主要困难是不方便像前两个问题一样顺利的解决变换的逆变换的问题。即很难找到一个$G(x',y')$使得$F(G(x,y)) = x,y$
+因此我们猜想利用一些$F(\cdot,\cdot)$函数的性质。$F(\cdot,\cdot)$的性质主要取决于后面的差分项，定义$F(x,y) = 1 + H(x,y)$
+来使用$H(\cdot,\cdot)$函数来表达这个差分项。并试图利用误差反向传播，参考非线性方程的相关解法得到方程的近似解。根据目前所学的
+知识，很难证明这个求逆在无限时间内必然收敛到$x,y$。但是，由于B样条曲线相近点的位移基本相同，因此这个思路是可取的，并且由于B
+样条变形的控制点对于整个图像在表观上的作用本身不是很明显，因此近似的非准确的实现这个过程就可以很好的完成要求。
+
+具体的算法如算法\ref{a3}所示，具体实验中$k = 1,eps = 2$ 就可以很好的完成上述任务，没有出现不合理情况。
+\begin{algorithm}[h]\caption{求B样条插值的逆变换的函数}\label{a3}\begin{algorithmic}
+    \Require 新图像中的绝对坐标位置$x',y'$
+    \Ensure 原图像中的绝对坐标位置$x,y$\end{algorithmic}\begin{algorithmic}[1]
+    \Function {B样条变换逆变换}{$x',y'$}
+    \State 定义常量$k,eps$
+    \State 记$x_i = x',y_i = y'$
+    \For {进行固定次数循环}
+    \State 计算$\{x_t,y_t\} = F(x_i,y_i)$
+    \State 考察计算误差$\{x_e,y_e\} = \{x_t,y_t\} - \{x',y'\}$
+    \State 误差反向传播$\{x_i,y_i\} = \{x_i,y_i\} - k\{x_e,y_e\}$
+    \If {$\|H(x_i,y_i)\|_\infty < eps$}
+        \State 退出循环
+    \EndIf
+    \EndFor
+    \EndFunction
+\end{algorithmic}\end{algorithm}
+\section{方案原理及误差分析}
+这里主要讨论的是使用插值方法的介绍与分析
+\section{实验结果分析}
+
+\end{document}

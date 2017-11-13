@@ -15,6 +15,7 @@
 *.pdf
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
+*.gz
 
 # Build results
 [Dd]ebug/
