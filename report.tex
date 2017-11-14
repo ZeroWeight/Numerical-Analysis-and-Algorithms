@@ -1,19 +1,8 @@
-\documentclass[UTF8,a4paper]{paper}
-\usepackage[utf8]{inputenc}
-\usepackage{ctex}
-\usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{pdfpages}
-\usepackage{graphicx}
-\usepackage{wrapfig}
-\usepackage{listings}
-\usepackage{multicol}
-\usepackage{float}
-\usepackage{algorithm}  
-\usepackage{algorithmicx}  
-\usepackage{algpseudocode} 
-\usepackage{appendix}
-\usepackage{url}
+\documentclass[UTF8,a4paper]{paper}\usepackage[utf8]{inputenc}\usepackage{algorithm}
+\usepackage{algorithmicx}\usepackage{algpseudocode}\usepackage{amsfonts}\usepackage{amsmath}
+\usepackage{ctex}\usepackage{diagbox}\usepackage{float}\usepackage{graphicx}
+\usepackage{listings}\usepackage{multicol}\usepackage{multirow}\usepackage{pdfpages}
+\usepackage{rotating}\usepackage{url}\usepackage{wrapfig}
 \title{\begin{large}数值分析第一次大作业\end{large}\\ 图像扭曲变形}
 \author{张蔚桐\ 2015011493\ 自55}
 \begin {document}
@@ -255,4 +244,63 @@ $$t_x = x - \biggl\lfloor x\biggr\rfloor\qquad, t_y = y - \biggl\lfloor y\biggr\
 数值。实际上，细致的讨论几种插值方法，均是周边几个点的线性组合，且他们的权重和为1，由于周边几个点均在$[0,255]$区间中，
 因此出现上限下限的点实际上不可能被插值函数获得，加入这一步仅仅是为了保证程序的运行安全，避免因为误计算导致程序崩溃。
 \section{实验结果分析}
+我们采用了Lena和网格图进行了测试，如下是三种变换和三种插值方法之后对应的效果图
+\begin{table}[!htb]
+\centering
+\caption{Lena各种方案的测试效果图}\resizebox{\linewidth}{!}{
+\begin{tabular}{|m{0.04\textwidth}<{\centering}|
+m{0.32\textwidth}<{\centering}|
+m{0.32\textwidth}<{\centering}|
+m{0.32\textwidth}<{\centering}|}\hline
+图像变换&最近邻插值&双线性插值&双三次插值\\ 
+\hline 图像旋转 &
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{L00.png}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{L01.png}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{L02.png}}\\
+\hline 水波纹变换 &
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{L10.png}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{L11.png}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{L12.png}}\\
+\hline 一次 B 样条插值 &
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{L20.png}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{L21.png}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{L22.png}}\\
+\hline 三次 B 样条插值 &
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{L30.png}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{L31.png}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{L32.png}}\\
+\hline \end{tabular}
+}
+\end{table}
+\begin{table}[!htb]
+\centering
+\caption{网格图各种方案的测试效果图}\resizebox{\linewidth}{!}{
+\begin{tabular}{|m{0.04\textwidth}<{\centering}|
+m{0.32\textwidth}<{\centering}|
+m{0.32\textwidth}<{\centering}|
+m{0.32\textwidth}<{\centering}|}\hline
+图像变换&最近邻插值&双线性插值&双三次插值\\ 
+\hline 图像旋转 &
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{S00.jpg}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{S01.jpg}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{S02.jpg}}\\
+\hline 水波纹变换 &
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{S10.jpg}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{S11.jpg}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{S12.jpg}}\\
+\hline 一次 B 样条插值 &
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{S20.jpg}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{S21.jpg}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{S22.jpg}}\\
+\hline 三次 B 样条插值 &
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{S30.jpg}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{S31.jpg}}&
+\raisebox{-0.95\height}{\includegraphics[width=0.3\textwidth]{S32.jpg}}\\
+\hline \end{tabular}
+}
+\end{table}
+可以看出几种插值算法的效果都还比较理想，对于B样条插值，双三次插值的平滑性要好于
+双线性插值和最近邻插值。同时，我们可以看出一次B样条插值的光滑性不如三次B样条插值
+的光滑性，当然，双三次插值，三次B样条插值的时间消耗也更长。实验过程中，旋转角度为
+125度，水波纹幅值为1，波长为5，初始相位角为0.
 \end{document}

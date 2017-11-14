@@ -1,0 +1,43 @@
+\documentclass[UTF8,a4paper]{paper}\usepackage[utf8]{inputenc}\usepackage{algorithm}
+\usepackage{algorithmicx}\usepackage{algpseudocode}\usepackage{amsfonts}\usepackage{amsmath}
+\usepackage{ctex}\usepackage{diagbox}\usepackage{float}\usepackage{graphicx}
+\usepackage{listings}\usepackage{multicol}\usepackage{multirow}\usepackage{pdfpages}
+\usepackage{rotating}\usepackage{url}\usepackage{wrapfig}
+\title{\begin{large}数值分析第一次大作业\end{large}\\ 图像扭曲变形
+\\ \begin{large}程序技术报告\end{large}}
+\author{张蔚桐\ 2015011493\ 自55}
+\begin {document}
+\maketitle
+\section{开发环境和运行平台}
+程序采用C\#基于Visual Studio 2017开发，需要在安装了.NET framework 4.0 以上版本的运行。
+在Windows 7及以下系统内可能需要重新安装.NET framework 4.0，在Windows 8及以上版本中可以直接运行。
+如果不能直接运行请检查.NET framework 版本。工程文件可以采用Visual Studio 2015 及以上版本直接打开。
+\section{程序使用说明}
+使用前段设计思路对程序进行了优化，使得程序更加用户友好。
+
+通过UI控件调整每一个变换的参数以及插值方法，对于旋转变换和水波纹变换，在图像上单击可以确定变换中心，
+拖动鼠标（不需要长按左键）可以选择变换半径，程序会自动显示变换的区间。再次点击确定变换的半径，程序
+开始运行。
+
+对B样条插值，点击B-spline开始工作，程序会渲染出所有的控制点。在控制点附近单击鼠标左键，程序会自动捕获
+最近的控制点并将其渲染成红色。拖动这个控制点，松开鼠标后程序开始执行。
+
+在任何涉及到鼠标的操作的过程中，单击鼠标右键可以取消当前的所有操作。
+
+完成之后，点击 'keep changes' 按钮可以将当前图像暂存，可以在已经修改的图像的基础上继续进行修改，而点击
+'discard changes' 按钮可以将图片回复到最原始的形态，最原始的图片始终显示在左上角。
+
+如果由于用户的不当操作导致图像的历史记录出现了混乱（如，没有回退到原始图像等），重新选择加载图片可以解决几乎
+所有问题。点击 'save image' 可以保存当前工作界面上的图片。
+
+点击close 按钮可以关闭窗口，点击minimize按钮可以最小化窗口，在非控件上直接拖动可以改变窗口的位置。实现了扁平化的
+设计思想。
+\section{程序执行速度说明}
+由于C\#的高度封装性，相比C++的执行速度比较慢，尤其是在遍历每一个像素的时候，由于C\#访问的并不是raw data，使得
+处理过程可能显得比较长，可以参考右下角进度条了解程序的执行流程。
+\section{代码情况}
+主要的内容均在Form1.cs文件中，使用Region分割成了若干块，其中kernel是主要部分，B样条插值的实现过程
+主要在mouse up函数中。
+\section{压缩包内容}
+测试图片（2张）在data/originIMG下，之前生成的图片在data/genIMG下（已经写到报告中），ImagePro/下是工程文件
+\end{document}

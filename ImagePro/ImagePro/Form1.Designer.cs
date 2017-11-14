@@ -454,10 +454,10 @@ namespace ImagePro
             this.radioButton5.AutoSize = true;
             this.radioButton5.Location = new System.Drawing.Point(7, 206);
             this.radioButton5.Name = "radioButton5";
-            this.radioButton5.Size = new System.Drawing.Size(126, 24);
+            this.radioButton5.Size = new System.Drawing.Size(181, 24);
             this.radioButton5.TabIndex = 28;
             this.radioButton5.TabStop = true;
-            this.radioButton5.Text = "radioButton5";
+            this.radioButton5.Text = "Cubic Base Function";
             this.radioButton5.UseVisualStyleBackColor = true;
             // 
             // radioButton4
@@ -465,10 +465,10 @@ namespace ImagePro
             this.radioButton4.AutoSize = true;
             this.radioButton4.Location = new System.Drawing.Point(6, 175);
             this.radioButton4.Name = "radioButton4";
-            this.radioButton4.Size = new System.Drawing.Size(126, 24);
+            this.radioButton4.Size = new System.Drawing.Size(185, 24);
             this.radioButton4.TabIndex = 27;
             this.radioButton4.TabStop = true;
-            this.radioButton4.Text = "radioButton4";
+            this.radioButton4.Text = "Linear Base Function";
             this.radioButton4.UseVisualStyleBackColor = true;
             // 
             // label2
