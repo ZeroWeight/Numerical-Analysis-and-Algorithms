@@ -11,7 +11,7 @@ namespace ImagePro
     {
         #region element
 
-        private static Bitmap _imgOri;
+        private static Bitmap _imgOri;// img ori
         private static Bitmap _imgDes;
         private static int _centerX;
         private static int _centerY;
@@ -19,16 +19,16 @@ namespace ImagePro
 
         private static double _theta;
 
-        private static double _amp;
+        private static double _amp;// para. in wave
         private static double _p;
         private static double _phi;
 
         private static short _status = 0;
         private static short _cosStatus = 0;
         private static bool _pressdown = false;
-        private static Graphics _g;
+        private static Graphics _g;// GDI+ tool
 
-        private static int[,,] _point;
+        private static int[,,] _point;// ctrl point
         private static int[,,] _basepoint;
         private static int _selectedX = -1, _selectedY = -1;
 
@@ -36,6 +36,7 @@ namespace ImagePro
 
         public Form1()
         {
+			// init. func.
             string filter = "|*.jpg;*.jpeg;*.bmp;*.png";
             InitializeComponent();
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
@@ -67,11 +68,13 @@ namespace ImagePro
 
         private void button1_Click(object sender, EventArgs e)
         {
+			// open
             openFileDialog1.ShowDialog();
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
+			// rot, init. 
             _status = 1;
             button1.Enabled = false;
             button2.Enabled = false;
@@ -84,11 +87,13 @@ namespace ImagePro
 
         private void button3_Click(object sender, EventArgs e)
         {
+			// save 
             saveFileDialog1.ShowDialog();
         }
 
         private void button4_Click(object sender, EventArgs e)
         {
+			// wave init
             _status = 2;
             button1.Enabled = false;
             button2.Enabled = false;
@@ -101,17 +106,20 @@ namespace ImagePro
 
         private void button5_Click(object sender, EventArgs e)
         {
+			// save changes
             _imgOri = (Bitmap)_imgDes.Clone();
         }
 
         private void button6_Click(object sender, EventArgs e)
         {
+			// discard changes
             _imgDes = (Bitmap)pictureBox1.Image.Clone();
             pictureBox2.Image = _imgDes;
         }
 
         private void button7_Click(object sender, EventArgs e)
         {
+			// B -sp. init, draw ctrl pt
             _status = 3;
             button1.Enabled = false;
             button2.Enabled = false;
@@ -146,6 +154,7 @@ namespace ImagePro
 
         private void rotation()
         {
+			// main func. in rot
             _theta = trackBar1.Value * Math.PI / 180;
             trackBar1.Enabled = false;
             progressBar1.Value = 0;
@@ -201,6 +210,7 @@ namespace ImagePro
 
         private void wave()
         {
+			// main func. in wave
             _amp = trackBar2.Value / 100.0;
             _p = trackBar3.Value;
             _phi = trackBar4.Value / 100.0;
@@ -284,6 +294,7 @@ namespace ImagePro
 
         private void _MouseDown(object sender, MouseEventArgs e)
         {
+			// sel due to state
             _pressdown = true;
             if (_status != 0 && e.Button == MouseButtons.Right)
             {
@@ -448,6 +459,7 @@ namespace ImagePro
 
         private void _MouseUp(object sender, MouseEventArgs e)
         {
+			// drag the ctrl point, release
             _pressdown = false;
             if (_status == 3)
             {
@@ -533,7 +545,7 @@ namespace ImagePro
         #endregion mouse
 
         #region trackBar
-
+		//using slider to set the value
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
             label1.Text = "Rotation angle: " + trackBar1.Value;
@@ -615,7 +627,7 @@ namespace ImagePro
         #endregion trackBar
 
         #region kernel
-
+		// Cubic, base for bicubic
         private double CubicPolate(double v0, double v1, double v2, double v3, double fracy)
         {
             double a = (v3 - v2) - (v0 - v1);
