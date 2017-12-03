@@ -1,0 +1,227 @@
+\documentclass[onecolumn,compsoc]{IEEEtran}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{ctex}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{url}
+\renewcommand{\IEEEQED}{\IEEEQEDclosed}
+\renewcommand{\d}{\mathrm{d}}
+\renewcommand{\|}{\Bigg |}
+\newcommand{\e}{\mathrm{e}}
+\title{\begin{large}数值分析第二次大作业\end{large}\\ e的数值计算}
+\author{张蔚桐\ 2015011493\ 自55}
+\begin {document}
+\maketitle
+\tableofcontents
+\clearpage
+\section{Taylor级数展开求e}
+\subsection{原理分析}
+考虑对函数$f(x) = \exp(x)$进行Maclaurin展开
+\begin{equation}\label{1eq1}
+\exp(x) = \sum_{i=0}^{\infty} \frac{\d^if(x)}{i!\d x^i}\|_{x = 0}x^i =  \sum_{i=0}^{\infty}\frac{x^i}{i!}
+\end{equation}
+将$x = 1$带入（\ref{1eq1}）式得到
+\begin{equation}\label{1eq2}
+\e = \exp(1) = \sum_{i=0}^{\infty}\frac{1}{i!}
+\end{equation}
+显然级数以阶乘的速度下降，因此可以通过级数求和来迅速计算$\e$，截取（\ref{1eq2}）前$n$项得到
+\begin{equation}\label{1eq3}
+\e \approx \sum_{i=0}^{n}\frac{1}{i!}
+\end{equation}
+\subsection{数值计算方法}
+（\ref{1eq3}）式虽然在理论上具有可计算性，然而对于$n!$的求取会对计算带来巨大的困难，实际上，$20!$已经超出了 C++标准
+定义的long long长整型的表示范围，$\frac{1}{i!}$则会更早的由于有效数字的问题带来精度丢失。因此我们需要对（\ref{1eq3}）
+式进行计算上的处理。
+
+展开（\ref{1eq3}）式，得到
+\begin{equation}\label{1eq4}
+\e \approx 1 + 1 + \frac{1}{2!} + \frac{1}{3!} + \cdots + \frac{1}{n!}
+\end{equation}
+类似秦九韶算法，对计算次序进行优化得到（\ref{1eq5}）式
+\begin{equation}\label{1eq5}
+\e\approx 2 + \frac{1}{2} (1 + \frac{1}{3}(1 + \cdots (\frac{1}{n-1}(1 + \frac{1}{n}))))
+\end{equation}
+采用逐次递推阶乘的原算法需要消耗$\mathcal{O}(n)$次加法，$\mathcal{O}(n)$次除法，而采用了次序优化之后的算法仍需要
+$\mathcal{O}(n)$次加法，$\mathcal{O}(n)$次除法，且常数没有发生变化，然而此时的计算已经从根本上减少了大数加小数的误差，
+而这种误差在顺行计算原公式时是很明显的。
+\subsection{方法误差分析}
+引入Maclaurin展式的Lagrange余项对方法误差进行分析
+\begin{equation}\label{1eq6}
+\exp(x) = \sum_{i=0}^n \frac{\d^if(x)}{i!\d x^i}\|_{x = 0}x^i + \frac{\d^{n+1}f(x)}{(n+1)!\d x^{n+1}}\|_{x = \xi}\xi^{n+1}, \xi \in(0,x)
+\end{equation}
+带入相关参数到（\ref{1eq6}）式中得到
+\begin{equation}\label{1eq7}
+\e=\exp(1)=\sum_{i=0}^n \frac{1}{i!} + \exp(\xi)\frac{\xi^{n+1}}{(n+1)!}, \xi\in(0,1)
+\end{equation}
+因此得到误差项为（\ref{1eq8}）式
+\begin{equation}\label{1eq8}
+R(n,\xi) = \exp(\xi)\frac{\xi^{n+1}}{(n+1)!}
+\end{equation}
+显然$R(n,\xi)$对于$\xi$而言单调递增，因此得到误差项上界为（\ref{1eq9}）式
+\begin{equation}\label{1eq9}
+R(n) \le \sup_{\xi\in(0,1)}\bigg(\exp(\xi)\frac{\xi^{n+1}}{(n+1)!}\bigg) = \frac{\e}{(n+1)!}
+\end{equation}
+从（\ref{1eq9}）式可以看出，误差随着计算次数$n$的增大而明显增大，从附录中我们知道double（long double）类型可以得到的15位有效数字，
+又知道$2 < \e < 3$，因此我们只需要保证$R(n) \le 10^{-16}$既可以保证所有的有效数字均被利用，下面求取$n$的范围：
+
+\begin{IEEEproof}[$n$范围的求取]
+
+$$\frac{\e}{(n+1)!} \le 10^{-16} \Rightarrow 16\ln(10) \le \ln((n+1)!) - 1$$ 
+应用Stirling公式近似，方便起见记$m = n+ 1$得到约束条件变为
+$$16\ln(10) + 1 \le \ln(\sqrt{2\pi m}(\frac{m}{\e})^m) = \ln(\sqrt{2\pi m}) + m\ln(\frac{m}{\e}) = \ln(\sqrt{2\pi m}) + m\ln(m) - m$$
+整理约束条件为$$16\ln(10) + 1 -\frac{\ln(2\pi)}{2}\le (m+\frac{1}{2})\ln(m) - m$$
+求方程数值解可以得到$m \ge  15 \Rightarrow n \ge 14$
+\end{IEEEproof}	
+从上述证明可以看出当$n \ge 14$时，方法误差就小于了存储误差下界，因此可以看出误差的收敛性是很好的。实际计算中$n = 100$远远超出了这个精度。
+\subsection{存储误差分析}
+这里分析（\ref{1eq5}）式带来的存储误差问题，我们依赖的数据结构为C++ 中的double（long double），他的存储有效位数请见附录。首先我们要给出算法的整体流程如算法\ref{A1}:
+\begin{algorithm}[h]\caption{Taylor级数计算e}\label{A1}
+\begin{algorithmic}
+\Require 迭代次数$n$
+\Ensure e的数值计算值eTaylor
+\State 初始化 eTaylor = $\frac{1}{n+1}$
+\For{$i$ 从 $n$到1}
+\State 递增eTaylor
+\State eTaylor = eTaylor $/i$
+\EndFor
+\State 递增eTaylor
+\State \Return eTaylor
+\end{algorithmic}\end{algorithm}
+我们对算式中的每一步进行分析，首先初始化eTaylor过程中，eTaylor的有效数字仍保持15位，在第一个循环开始之后，递增eTaylor过程中出现第一次精度损失，将之前的从$\frac{1}{n+1}$开始的15位有效数字和1相加，必然得到从1开始的十五位有效数字，亦即精确到$10^{-14}$。另外，显然eTaylor此时在1 和2 中间，下一步除法时，有效数字仍为15位。
+
+第二个循环开始之后，首先递增过程依然将精度损失到$10^{-14}$，之后每次循环均保持这这个运算有效数字，直到循环结束，此时eTaylor的值为e-1，下一步递增工作仍然保持着上述精度，因此运算精度可以保留到$10^{-14}$，即小数点后14位上。
+\subsection{计算结论分析和复杂度分析}
+综合前两节的叙述，采用$n = 100$的设定之后，使用Taylor公式对e的计算可以达到小数点后15位，实际编程操作后确认了这个结论，我们得到的eTaylor和实际的e分别为（\ref{1eq10}）式所示。程序耗时$1.2\mu s$，测试CPU主频2GHz
+\begin{equation}\label{1eq10}\begin{aligned}
+\mathrm{eTaylor} &= 2.71828\ 18284\ 59045 \\ 
+\e &\approx 2.71828\ 18284\ 59045\ 23536\ 02874 
+\end{aligned}\end{equation}
+程序属于线性复杂度（按照加法和乘法次数计算），可推广性很好。且收敛速度为$\mathcal{O}(n!)$，不需要很大的$n$就可以让计算收敛。同时，Taylor方法的另外一个优点是，计算精度随着$n$的增大而单调递增，由于较大的$n$必然包括较小的$n$的计算项，提高$n$的值只可能是的后面的项受到计算精度的影响而消失，不影响前面的项。
+\section{数值求解微分方程得到e的数值解}
+\subsection{原理分析}
+考虑含边界条件的微分方程（\ref{2eq1}）式的解析解：
+\begin{equation}\label{2eq1}
+\frac{\d y}{\d x} = y;\  y(0) = 1
+\end{equation}
+自然得到方程的解析解为$y = \exp(x)$，计算$y(1)$即可得到e的值，因此只需要设计计算（\ref{2eq1}）式的方法
+\subsection{数值计算方法}
+采用四阶Runge-Kutta方法对微分方程（\ref{2eq1}）式进行求取，其常用的基本迭代方式为（\ref{2eq2}）式所示，其中$h$为分割的小区间长度。
+\begin{equation}\label{2eq2}\begin{cases}\begin{aligned}
+y_{n+1} &= y_n + \frac{h}{6}(K_1+2K_2+2K_3+K_4)\\
+K_1 &= y_n\\
+K_2 &= y_n + \frac{h}{2}K_1 \\
+K_3 &= y_n + \frac{h}{2}K_2 \\
+K_4 &= y_n + hK_3
+\end{aligned}\end{cases}\end{equation}
+将区间从0到1分割成n段，按照递推进行计算即可得到e的值
+\subsection{方法误差分析}
+参考数值分析教材可以知道，四阶Runge-Kutta方法的截断误差为$\mathcal{O}(h^5)$，因此对整个区间上的截断误差为$\mathcal{O}(h^4)$，当$n >10^4$即$h < 10^{-4}$时，可以保留到16位有效数字，此时方法误差上限小于存储误差下限
+\subsection{存储误差分析}
+由递推式（\ref{2eq2}）式知道，$y,K$这些参数受到加法的影响，其有效数字被确定在了15位，可以精确到小数点后14位，因此这个算法的计算精度应为小数点后14位。当然，如果$h$过小，$h$的作用就会被明显的削弱，由于$1 \le y \le \e$，而可以看出在$K_4$项上出现了$h^3$项，转到$y$的递推式上就出现了$h^4$项，因此我们必须保证$h^4$在有效数字范围内，同时从上节方法误差分析中我们可以看出$h < 10^{-4}$时才能保证方法误差小于存储误差，因此作为一种折中，实验操作中$n = 10^4,h < 10^{-4}$
+\subsection{计算结论分析和复杂度分析}
+综合前两节的叙述，采用$n =  10^4$的设定之后，使用微分方程对e的计算可以达到小数点后14位，实际编程操作后确认了这个结论，我们得到的eDEQN和实际的e分别为（\ref{2eq10}）式所示。程序耗时$243.3\mu s$，测试CPU主频2GHz
+\begin{equation}\label{2eq10}\begin{aligned}
+\mathrm{eDEQN} &= 2.71828\ 18284\ 59040 \\ 
+\e &\approx 2.71828\ 18284\ 59045\ 23536\ 02874 
+\end{aligned}\end{equation}
+程序属于线性复杂度（按照加法和乘法次数计算），可推广性较好，相比于Taylor方法的$\mathcal{O}(n!)$的收敛速度，这种方式的收敛速度是$\mathcal{O}(n^4)$，因此得到较好解的速度比上种方法慢得多。同时，相比于Taylor展开方法，一味提高$n$的值可能使计算过程中$h$项由于舍入误差消失，因此这种方法不如上面Taylor展开方法。
+\section{数值积分求解e的数值解}
+\subsection{原理分析}
+考虑积分方程（\ref{3eq1}）式的根为e，因此可以考虑通过求解此积分方程来计算e的数值解。
+\begin{equation}\label{3eq1}
+f(x) = \int_1^x\frac{1}{t}\d t = 1
+\end{equation}
+\subsection{数值计算方法}
+首先我们对$f(x)$以$h$为间隔进行采样得到一组$f(x_k)$，显然他们之间的递推关系为（\ref{3eq2}）式
+\begin{equation}\label{3eq2}\begin{cases}
+f(1) = 0\\
+f(x_k) = f(x_{k-1}) + \int_{x_{k-1}}^{x_k}\frac{1}{t}\d t
+\end{cases}\end{equation}
+利用数值积分方法求取每一个小区间上的积分值，为了提高精度，我们可以将$h$取的充分小，并利用梯形公式求解。这样得到了一组$f(x_k)$。
+
+通过寻找$f(x_k)-1$的过零点位置$x_z$进行线性插值（弦截法求根）可以得到零点$x^*$的位置为（\ref{3eq3}）式
+\begin{equation}\label{3eq3}\begin{cases}
+f(x_z) > 1\\
+f(x_{z-1}) < 1\\
+x^* = x_{z-1} + \frac{1-f(x_{z-1})}{f(x_z)-f(x_{z-1})}
+\end{cases}\end{equation}
+积分公式采用梯形公式，因为这不需要增加内部节点的数量，相对速度也比较快，实际上，由于$h$已经取的很小，Cotos，Simpson，梯形三种积分公式的差别不大。
+\subsection{方法误差分析}
+方法误差包括两个方面，一方面是积分公式带来的误差，一方面是插值带来的误差。积分公式如果采用梯形公式，则在分割节点的控制之下
+积分公式表现为复合梯形公式，其余项可以表征为（\ref{3eq4}）式，其中积分函数$f(t) = 1 / t$
+\begin{equation}\label{3eq4}
+|R_n(f)| = -\frac{\e-1}{12}h^2f''(\xi)\|_{\xi\in(0,\e+h)} < \frac{\e-1}{6}h^2
+\end{equation}
+如果采用复合Simpson公式，则余项可以表征为（\ref{3eq5}）式，其中积分函数$f(t) = 1 / t$
+\begin{equation}\label{3eq5}
+|R_n(f)| = -\frac{\e-1}{180}\frac{h}{2}^4f^{(4)}(\xi)\|_{\xi\in(0,\e+h)} < \frac{\e-1}{120}h^4
+\end{equation}
+可以看到复合Simpson公式带来更小的误差
+
+另一部分的误差来源于插值求根公式，线性插值误差表征为（\ref{3eq6}）式，其中插值原函数$f(x) = \ln(x)$
+\begin{equation}\label{3eq6}
+R_n(x) = |\frac{f''(\xi)}{2}(x-x_1)(x-x_1)|\|_{\xi \in (\e-h,\e+h)} \le \frac{h^2}{8\e^2}
+\end{equation}
+
+综合两方面的误差，我们可以认为误差在$\mathcal O (h^2)$量级上，当$n = 1/h = 10^8$时，方法误差上限小于舍入误差下限。
+\subsection{存储误差分析}
+首先写出我们的算法过程如算法\ref{A2}所示
+\begin{algorithm}[h]\caption{数值积分计算e}\label{A2}
+\begin{algorithmic}
+\Require 分割间隔$N$
+\Ensure e的数值计算值eInt
+\State 初始化$iter = 1, h = \frac{1}{N}, p = 0, n = 0$
+\State 为$p$加下一个积分区间段的值
+\While {$p$ < 1}
+\State $n$ = $p$;
+\State $iter$ += $h$;
+\State 为$p$加下一个积分区间段的值
+\EndWhile
+\State 计算eInt$ = iter + h\frac{1 - n}{p - n}$
+\State \Return eInt
+\end{algorithmic}\end{algorithm}
+我们可以看出，在计算n和p的过程中，收到加法的限制，$p$最终可以保证精确到小数点后14位，
+$n$最终可以保证精确到小数点后15位，精度的损失出现在线性插值过程中。$\frac{1 - n}{p - n}$
+将出现位数损失，根据程序计算流程可以得到$\ln(\e-h) < n < 1 < p < \ln(\e+h)$。因此得到
+\begin{equation}\label{3eq7}\begin{cases}
+-\frac{h}{\e} < \ln(\e-h) -1 < n -1 < 0 \Rightarrow 1-n < \frac{h}{\e} \\
+0 < p-n < 2\frac{h}{\e}
+\end{cases}\end{equation}
+$1-n$和$p-n$均只能在（\ref{3eq7}）式确定的值，但只能保留到小数点后14位。
+这里做一个近似的估计，我们设$N = \frac{1}{h} = 10^m$，则可以看出有效数字缩减为$14 - m$位
+
+但是受到前面iter项的限制，存储精度可以保留到小数点后14位。
+
+下面讨论积分公式中的存储误差限制，积分原函数为$f(t) = 1/t$，要求$t$变化时，变化的主项必须保证，
+也就是说$f(t+h) - f(t)$的数值必须非零，否则会产生明显的存储误差。利用Taylor公式展开得到
+$f(t+h) - f(t) = -\frac{h}{t^2}$，因此我们需要要求$\frac{h}{t}>10^{-14}$，于是得到
+$h > 10^{-13}$
+
+\subsection{计算结论分析和复杂度分析}
+由于涉及的分割区间大小$h$过小，因此在计算过程中根据系统实现的不同也会出现存储误差，经过测试，当
+$n = \frac{1}{h} = 10^7$时出现明显的存储误差，主要的存储误差出现在了对$h = 1/n$的存储，大数和
+小数的相加等问题，另外，这个算法的计算复杂度是$\mathcal O(N) = \mathcal O(\frac{1}{h})$的，当
+$h$选取的过小时，计算时间出现明显的上升。实际测试中选取了$N = 10^5$，可以精确到小数点后9位。
+
+实际编程操作后确认了这个结论，我们得到的eInt和实际的e分别为（\ref{3eq10}）式所示。可以精确到小数点后10位
+程序耗时$13\mathrm{ms}$，测试CPU主频2GHz
+\begin{equation}\label{3eq10}\begin{aligned}
+\mathrm{eDEQN} &= 2.71828\ 18284\ 60041 \\ 
+\e &\approx 2.71828\ 18284\ 59045\ 23536\ 02874 
+\end{aligned}\end{equation}
+程序属于线性复杂度（按照加法和乘法次数计算），相比于Taylor方法的$\mathcal{O}(n!)$的收敛速度，
+这种方式的收敛速度是$\mathcal{O}(n^2)$，因此得到较好解的速度比上种方法慢得多。同时，相比于Taylor展开方法，
+一味提高$n$的值可能使计算过程中$h$项由于舍入误差消失，因此这种方法不如上面两种方法。
+\section{小结}
+从上述讨论中我们可以看出，Taylor展开方法相对于后面两种方法有着更好的收敛速度，更低的计算代价和更小的计算误差，
+因此在实际计算过程中更推荐使用Taylor展开方法计算e的数值
+\appendix[C++ 标准中double的存储方式和有效值]
+C++ 中的基本数据类型double（又称long double）是符合IEEE 754浮点数运算标准下的64位浮点数基本数据结构。
+按照IEEE 754的要求，其包括1位二进制符号位，11位二进制指数位和52位二进制尾数位，其表示方法是二进制科学
+计数法。因此可以认为double的二进制有效数字为52位，转10进制得到$\log_{10}52 \approx 15.6$。因此我们可以
+认为一个double（long double）可以提供15位有效数字，实际的测试中可以验证这个有效数字位数是正确的。
+\end{document}

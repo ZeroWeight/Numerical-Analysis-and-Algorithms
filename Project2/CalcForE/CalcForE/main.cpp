@@ -10,15 +10,14 @@ inline _type DiffE (const int n);
 inline _type IntegE (const int n);
 int main (int argc, char** argv) {
 	std::cout << std::fixed << std::setprecision (15);
-	Test (TaylorE, 1e3);
-	Test (DiffE, 1e10);
-	Test (IntegE, 1e6);
+	Test (TaylorE, 1e2);
+	Test (DiffE, 1e4);
+	Test (IntegE, 1e5);
 	return 0;
 }
 inline void Test (std::function<_type (const int n)> f, const int n) {
 	LARGE_INTEGER start_time, stop_time, freq;
 	_type e;
-	// Taylor
 	QueryPerformanceFrequency (&freq);
 	QueryPerformanceCounter (&start_time);
 	e = f (n);
@@ -34,8 +33,15 @@ _type TaylorE (const int n) {
 	return ++eTaylor;
 }
 _type DiffE (const int n) {
-	_type a = 1.0 + 1.0 / n;
-	return pow (a, n);
+	_type h = 1.0 / n, k1, k2, k3, k4, ry = 0;
+	for (int i = 0; i < n; i++) {
+		k1 = ry * h / 6.0 + 1;
+		k2 = ry * h / 6.0 + 1 + h * k1 / 2;
+		k3 = ry * h / 6.0 + 1 + h * k2 / 2;
+		k4 = ry * h / 6.0 + 1 + h * k3;
+		ry += (k1 + 2 * k2 + 2 * k3 + k4);
+	}
+	return ry * h / 6.0 + 1;
 }
 _type IntegE (const int n) {
 	_type interval = 1.0 / n, p_value = 0.0, n_value = 0.0, iter = 1.0;
@@ -57,5 +63,5 @@ _type IntegE (const int n) {
 		iter += interval;
 		p_value += Intg_func ();
 	}
-	return iter + interval * (p_value - 1) / (p_value - n_value);
+	return iter + interval * (1 - n_value) / (p_value - n_value);
 }
