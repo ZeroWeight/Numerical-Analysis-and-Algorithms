@@ -94,6 +94,19 @@ $$16\ln(10) + 1 \le \ln(\sqrt{2\pi m}(\frac{m}{\e})^m) = \ln(\sqrt{2\pi m}) + m\
 我们对算式中的每一步进行分析，首先初始化eTaylor过程中，eTaylor的有效数字仍保持15位，在第一个循环开始之后，递增eTaylor过程中出现第一次精度损失，将之前的从$\frac{1}{n+1}$开始的15位有效数字和1相加，必然得到从1开始的十五位有效数字，亦即精确到$10^{-14}$。另外，显然eTaylor此时在1 和2 中间，下一步除法时，有效数字仍为15位。
 
 第二个循环开始之后，首先递增过程依然将精度损失到$10^{-14}$，之后每次循环均保持这这个运算有效数字，直到循环结束，此时eTaylor的值为e-1，下一步递增工作仍然保持着上述精度，因此运算精度可以保留到$10^{-14}$，即小数点后14位上。
+
+上述分析的是单步存储误差，然而由于程序不断迭代，存储误差会被不断增大，因此需要估计迭代传递的存储误差，这里我们记$\Delta =5\times10^{-15}$估计为每步的有效数字引起的误差（上面已经证明运算精度可以达到$10^{-14}$）
+
+主要的迭代过程是一个反向迭代，可以表示为(\ref{A1eq})式
+\begin{equation}\label{A1eq}y_{n-1} = \frac{y_n + 1}{n}\end{equation}
+取存储误差和传递误差分析得到误差传递为（\ref{A2eq})所示
+\begin{equation}\label{A2eq}\delta_{y_{n-1}} = \frac{\delta_{y_{n}}}{n}+ \Delta\end{equation}
+处理这个式子立刻得到可递推的（\ref{A3eq}）式
+\begin{equation}\label{A3eq}\frac{\delta_{y_{n-1}}}{(n-1)!} = \frac{\delta_{y_{n}}}{n!}
++ \frac{\Delta}{(n-1)!}\end{equation}
+反向计算等差数列可以得到确定的传递误差精度为（\ref{A4eq}）式
+\begin{equation}\label{A4eq}\delta_{y_{n-1}} = \Delta\sum_{i=0}^n\frac{1}{i!}\approx{\Delta\e}\end{equation}
+进一步可以说明传递误差精度是受限的，因此上面分析的单步误差精度是有意义的。
 \subsection{计算结论分析和复杂度分析}
 综合前两节的叙述，采用$n = 100$的设定之后，使用Taylor公式对e的计算可以达到小数点后15位，实际编程操作后确认了这个结论，我们得到的eTaylor和实际的e分别为（\ref{1eq10}）式所示。程序耗时$1.2\mu s$，测试CPU主频2GHz
 \begin{equation}\label{1eq10}\begin{aligned}
@@ -122,6 +135,34 @@ K_4 &= y_n + hK_3
 参考数值分析教材可以知道，四阶Runge-Kutta方法的截断误差为$\mathcal{O}(h^5)$，因此对整个区间上的截断误差为$\mathcal{O}(h^4)$，当$n >10^4$即$h < 10^{-4}$时，可以保留到16位有效数字，此时方法误差上限小于存储误差下限
 \subsection{存储误差分析}
 由递推式（\ref{2eq2}）式知道，$y,K$这些参数受到加法的影响，其有效数字被确定在了15位，可以精确到小数点后14位，因此这个算法的计算精度应为小数点后14位。当然，如果$h$过小，$h$的作用就会被明显的削弱，由于$1 \le y \le \e$，而可以看出在$K_4$项上出现了$h^3$项，转到$y$的递推式上就出现了$h^4$项，因此我们必须保证$h^4$在有效数字范围内，同时从上节方法误差分析中我们可以看出$h < 10^{-4}$时才能保证方法误差小于存储误差，因此作为一种折中，实验操作中$n = 10^4,h < 10^{-4}$
+
+上述分析的是单步存储误差，然而由于程序不断迭代，存储误差会被不断增大，因此需要估计迭代传递的存储误差，这里我们记$\Delta =5\times10^{-15}$估计为每步的有效数字引起的误差（上面已经证明运算精度可以达到$10^{-14}$）
+
+我们按照（\ref{2eq2}）式定义的方式来计算由于迭代造成的存储误差。首先误差分析得到（\ref{A5eq}）式
+\begin{equation}\label{A5eq}\begin{cases}\begin{aligned}
+\delta_{y_{n+1}} &= \delta_{y_n} + \frac{h}{6}(\delta_{K_1}+2\delta_{K_2}+2\delta_{K_3}+\delta_{K_4}) + \Delta\\
+\delta_{K_1} &= \delta_{y_n} \ \ \text{(由于没有计算过程，不含$\Delta$项）}\\
+\delta_{K_2} &= \delta_{y_n} + \frac{h}{2}\delta_{K_1} + \Delta\\
+\delta_{K_3} &= \delta_{y_n} + \frac{h}{2}\delta_{K_2} + \Delta\\
+\delta_{K_4} &= \delta_{y_n} + h\delta_{K_3} + \Delta
+\end{aligned}\end{cases}\end{equation}
+将（\ref{A5eq}）式带入分析得到（\ref{A6eq}）式
+\begin{equation}\label{A6eq}\begin{cases}\begin{aligned}
+\delta_{K_2} &= (1+\frac{h}{2})\delta_{y_n} + \Delta\\
+\delta_{K_3} &= (1+\frac{h}{2}+\frac{h^2}{4})\delta_{y_n} + (1+\frac{h}{2})\Delta\\
+\delta_{K_4} &= (1+h+\frac{h^2}{2}+\frac{h^3}{4})\delta_{y_n} + (1+h+\frac{h^2}{2})\Delta\\
+
+\delta_{y_{n+1}} &=\delta_{y_n} + \frac{h}{6}((5+3h+h^2+\frac{h^3}{4})\delta_{y_n} + (5+2h+\frac{h^2}{2})\Delta) + \Delta \le (1+h)(\delta_{y_n}+\Delta)
+\end{aligned}\end{cases}\end{equation}
+式（\ref{A6eq}）中最后一步进行了一次近似，方便之后的求取。配系数得到（\ref{A7eq}）式
+\begin{equation}\label{A7eq}\begin{aligned}\delta_{y_{n+1}} &= (1+h)\delta_{y_n}+(1+h)\frac{(1+h)-1}{h}\Delta\\
+\delta_{y_{n+1}} + \frac{1+h}{h}\Delta &= (1+h)(\delta_{y_{n}} + \frac{1+h}{h}\Delta)
+\end{aligned}\end{equation}
+利用等比数列相关知识立刻得到最终的误差分析式为（\ref{A8eq}）式。
+\begin{equation}\label{A8eq}
+\delta_{y_{n}} = (1+h)^n(\frac{1+2h}{h}\Delta) - \frac{1+h}{h}\Delta\approx\frac{\e+2h\e-1-h}{h}\Delta\end{equation}
+
+我们可以明确的发现这个式（\label{A8eq}）是发散的。这说明h的值不能取得太小。当然式（\label{A8eq}）只是一个近似式。通过上文关于主项的分析我们大致可以判断出$h$取值为多少时可以保证上式的相对稳定。综合所有分析可以取$h=10^{-4}$
 \subsection{计算结论分析和复杂度分析}
 综合前两节的叙述，采用$n =  10^4$的设定之后，使用微分方程对e的计算可以达到小数点后14位，实际编程操作后确认了这个结论，我们得到的eDEQN和实际的e分别为（\ref{2eq10}）式所示。程序耗时$243.3\mu s$，测试CPU主频2GHz
 \begin{equation}\label{2eq10}\begin{aligned}
@@ -201,11 +242,12 @@ $1-n$和$p-n$均只能在（\ref{3eq7}）式确定的值，但只能保留到小
 $f(t+h) - f(t) = -\frac{h}{t^2}$，因此我们需要要求$\frac{h}{t}>10^{-14}$，于是得到
 $h > 10^{-13}$
 
+下面分析迭代误差，由于程序计算过程中对于积分累加过程中将误差直接进行了累加，因此从过程中得到的累加误差高达$n\Delta$（记$\Delta =5\times10^{-15}$估计为每步的有效数字引起的误差（上面已经证明运算精度可以达到$10^{-14}$））。因此积分方法的误差发散的也最严重。结合上面的方法误差可以达到$h^2$的分析，下面求解导致误差发散不会淹没方法的最小$h$：由于误差传递从$10^{-15}$量级上损失$h$个有效数字，而方法误差达到$h^2$量级，因此得到两个方法的交汇在$2\|\lg h\| = 15-\|\lg h\|$上，得到$h=10^{-5}$，对应方法误差和存储误差均在$10^{-10}$级别上，因此预计可以达到$10^{-9}$级别的精确度。和前两个相比相差很多。
 \subsection{计算结论分析和复杂度分析}
 由于涉及的分割区间大小$h$过小，因此在计算过程中根据系统实现的不同也会出现存储误差，经过测试，当
 $n = \frac{1}{h} = 10^7$时出现明显的存储误差，主要的存储误差出现在了对$h = 1/n$的存储，大数和
 小数的相加等问题，另外，这个算法的计算复杂度是$\mathcal O(N) = \mathcal O(\frac{1}{h})$的，当
-$h$选取的过小时，计算时间出现明显的上升。实际测试中选取了$N = 10^5$，可以精确到小数点后9位。
+$h$选取的过小时，计算时间出现明显的上升。实际测试中选取了$N = 10^5$，可以精确到小数点后9位。这一点和之前理论分析得到的估计值一致。
 
 实际编程操作后确认了这个结论，我们得到的eInt和实际的e分别为（\ref{3eq10}）式所示。可以精确到小数点后10位
 程序耗时$13\mathrm{ms}$，测试CPU主频2GHz

@@ -10,9 +10,13 @@
 *.sln.docstates
 *.bmp
 *.png
+*.vscode
 *.jpg
 *.jpeg
-*.pdf
+#*.pdf
+*.aux
+*.fdb_latexmk
+*.fls
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 *.gz

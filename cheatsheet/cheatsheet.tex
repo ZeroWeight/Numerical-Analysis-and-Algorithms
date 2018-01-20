@@ -1,0 +1,313 @@
+% !Mode:: "TeX:UTF-8"
+\documentclass[UTF8,a4paper,landscape,compress]{paper}
+\usepackage{ctex}
+\usepackage{amsmath}
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{enumitem}
+\usepackage{multicol}
+\usepackage{float}
+\usepackage{cuted}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage[landscape]{geometry}
+\usepackage[figuresright]{rotating}
+\linespread{0.5}
+\geometry{left =0cm,right = 0cm,top = 0cm, bottom = 0cm}
+\pagestyle{fancy}
+\renewcommand{\subsection}[1]{{\small\textbf{\underline{#1}}}\\ }
+\renewcommand{\section}[1]{{\normalsize\textbf{\emph{#1}}}\\ }
+\newcommand{\List}[1]{\begin{itemize}[fullwidth,itemindent=0em] #1 \end{itemize}}
+\begin{document}\footnotesize
+\begin{multicols}{4}
+\section{数值分析和科学计算引论}
+    \List{
+    \item {分析误差：两种都要算}
+    \item {模型误差：数学模型和实际问题中的误差}
+    \item {观测误差：由观测结果产生的误差}
+    \item {截断误差（方法误差）：数值方法近似过程中的误差}
+    \item {舍入误差：原始数据在计算机上表示的误差}
+    \item {$x^*$是$x$的近似值，$e^* = x^* - x$称为绝对误差，
+    $e^*_r = e^* / x $为相对误差，上限为绝对误差限和相对误差限}
+    \item {若 $x^* = \pm 10^m (a_1 + a_2 \times 10^-1 + \cdots + a_l \times 10^{l-1})$有$n$位有效数字，则
+    $\epsilon^*_r \le \frac{1}{2a_1}\times 10^{-(n-1)}$.如果其具有相对误差限
+    $\epsilon^*_r \le \frac{1}{2a_1 + 2} \times 10 ^{-(n-1)}$，则说明$x^*$至少有$n$位有效数字}
+    \item {避免产生误差危害的方法：先小后大；避免相近相减；避免交错级数；避免被除数远大于除数；松弛技术}
+    }
+\section{插值法}
+    \List{
+        \item {在$a\le x_0<x_1<\cdots<x_n\le b$上点唯一确定一个$n$次多项式插值}
+    }
+    \subsection{Lagrange插值法}
+    \List{
+        \item {$n$次Lagrange插值基函数$l_j(x)$满足
+        $l_j(x_k) = \delta_{kj}$}
+        \item {$l_k(x) =\prod_{j\ne k} (x-x_j) / \prod_{j\ne k} (x_k-x_j)$}
+        \item {$\omega_{n+1}(x) = \displaystyle{\prod_{j=0}^n(x-x_j)}, \omega'(x_k)=\displaystyle{\prod_{j=0,j\ne k}^n(x_k-x_j)}$}
+        \item {$l_k(x) = \frac{\omega_{n+1}(x)}{(x-x_k)\omega_{n+1}'(x_k)},L_n(x)=\sum y_kl_k(x)$}
+        \item {$R_n(x) = \frac{f^{(n+1)}(\xi)}{(n+1)!}\omega_{n+1}(x) \le \frac{M}{(n+1)!}
+        \max\{\omega_{n+1}\}$\\ 证明$R_n(x) = f(x)-L_n(x) = K(x)\prod(x-x_i)$,$\phi(t) = K(x_0)\prod(t-x_i) -f(t) + L_n(t)$，在节点和$x_0$上为零，使用罗尔定理}
+        \item {插值基函数性质：$\sum x_i^k l_i(x) = x^k, \sum (x_i-x)^k l_i(x) = 0, \sum l_i(x) = 1$}
+		\item {计算代价：总体$\mathcal O(n^2)$，单步：$\mathcal O(n^2)$}
+    }
+    \subsection{Newton插值法}
+    \List{
+        \item {一阶均差：$f[x_0,x_k] = \frac{f[x_k] - f[x_0]}{x_k-x_0}$}
+        \item {二阶均差：$f[x_0,x_1,x_k] = \frac{f[x_0,x_k] - f[x_0,x_1]}{x_k-x_1}$}
+        \item {k阶：$f[x_0,\cdots, x_k] = \frac{f[x_0,\cdots,x_{k-2},x_k] - f[x_0,\cdots, x_{k-1}]}
+        {x_k-x_{k-1}}$}
+        \item {$f[x_0,\cdots,x_k] = \sum^k_{j=0}[\frac{f(x_j)}{\prod^k_{i\ne j,i=0}(x_j-x_i)}]$}
+        \item {轮转对称性：$f[x_0,\cdots,x_k] = f[Q[x_0,\cdots,x_k]]$}
+        \item {若$f(x)$在$[a,b]$上存在$n$阶导数，$f[x_0,\cdots,x_n]=\frac{f^{(n)}(\xi)}{n!}$}
+        \item {插值公式$P_n(x) = P_{n-1}(x) + f[x_0,\cdots,x_n] \omega_n(x)$}
+        \item {余项$R_n(x) = f[x,x_0,\cdots,x_n]\omega_{n+1}(x) = \frac{f^{(n+1)}(\xi)}{(n+1)!}$}
+        \item {一阶向前差分$\Delta f_k = f_{k+1} - f_k$，向后差分$\nabla f_k = f_k - f_{k-1}$，中心差分$\delta f_k = f_{k+\frac{1}{2}} - f_{k-\frac{1}{2}}$}
+        \item {位移因子$Ef_k=f_{k+1}, \Delta = E - I, \nabla = I - E^{-1}$，可以二项展开，$(a+b)^n = \sum_{i=0}^n a^i b^{n-i} \frac{n!}{i!(n-1)!}$}
+        \item {Newton等间隔（前插）公式，下面$h$为插值节点间隔}
+        \item {$P(x_0+th) = \sum_{i=0}^n\frac{\prod_{j=1}^i(t-j+1)}{i!}\Delta^if_0 = f_0 + t\Delta f_0 + \frac{t(t-1)}{2!}\Delta^2f_0 + \cdots + \frac{t(t-1)\cdots(t-n+1)}{n!}\Delta^nf_0$ }
+        \item {余项 $R_n(x) = t(t-1)\cdots(t-n)h^{n+1}f^{(n+1)}(\xi)/(n+1)!$，t是变量}
+		\item {计算代价：总体$\mathcal O(n^2)$，单步：$\mathcal O(n)$}
+        }
+    \subsection{埃尔米特插值：给定节点和节点上的若干导数}
+    \List{
+        \item {$R_n(x) = \frac{f^{(m+1)}(\xi)}{(m+1)!}\prod(x-x_i)^{\alpha_i}$}
+        \item {$\alpha_i$ 为每个节点上的条件个数，$m = \sum \alpha_i - 1$}
+    }
+    \subsection{分段低次插值与三次样条插值,$h$为区间长度}
+    \List{
+        \item {分段线性插值：$|R_n(x)| \le \frac{h^2}{8}M_2$。三次埃尔米特插值：$|R_n(x)| \le \frac{h^4}{384}M_4$（每个点多给出导数，单一区间）}
+        \item {三次样条插值：$0\rightarrow n$共n+1个点，4n个待定参数。插值函数值，一阶、二阶导数连续（$3n-3$个条件），每个点的函数值（$n + 1$个条件），两个边界条件，确定。}
+        \item {常见边界条件：1. 给定两端一阶导数；2. 给定两端二阶导数，为零：自然边界条件；3. $x_0,x_n$处二阶导数，一阶导数相等（再加上原来相等，为周期函数） }
+        \item {三次样条误差界：$R^{(k)}(x) = M_4 h^{4-k} C_k$对应各阶导数的误差，$C_0 = \frac{5}{384},C_1 = \frac{1}{24},C_2=\frac{3}{8}$}
+    }
+\section{函数逼近}
+    \List{
+        \item {最小零偏差：函数范数最小}
+        \item {向量范数：$\|x\| \ge 0, \|x\| =0 \iff x = 0, \|\alpha x\| = |\alpha|\|x\|, \|x+y\| \le \|x\| + \|y\|$ 当且仅当线性相关取等号}
+        \item {内积空间:$|(u,v)|^2 \le (u,u)(v,v)$，当且仅当线性相关取等号，$|(u_i,u_j)_{i,j}| \ne 0 \iff $ 向量组$u_*$线性无关 }
+        \item {函数范数$\|f\|_\infty = \max\{|f|\}, \|f\|_1 = \int_a^b|f|\mathrm d x, \|f\|_2 = \sqrt{\int_a^bf^2\mathrm d x}$，对应函数逼近分别称为（一致）逼近，平方逼近}
+        \item {函数带权内积$<f,g> = \int_a^bfg\rho\mathrm dx,\rho(x) \ge 0$且连续}
+        \item {正交函数族：$<\phi_j,\phi_k> =A_{i}\delta_{ij},A_i=1$则称标准正交}
+        \item {施密特正交化方法：从函数族$\{\eta_i\}$中正交化：$\phi_0 = \eta_0$\\$ \phi_n = \eta_n - \sum_{i=0}^{n-1}[\frac{<\eta_n,\phi_i>}{<\phi_i,\phi_i>}\phi_i]$，主要研究多项式函数族}
+    }
+    \subsection{正交多项式性质}
+    \List{
+        \item {任何$P(x)\in H_n$可表示为$\{\phi\}^n_0$的线性组合}
+        \item {$\phi_n(x)$与任何次数小于$n$的多项式$P(x)\in H_{n-1}$正交}
+        \item {$\{\phi_x(x)\}$在$[a,b]$上正交,$\phi_0 = 1,\phi_{-1} = 0 \Rightarrow$ \\ $ \phi_{n+1} = (x-\alpha_n)\phi_n(x)-\beta_n\phi_{n-1}x$。证明思路：$x\phi_n$正交化，并从积分上分析$(x\phi_n,\phi_{n-1}) = (\phi_n,x\phi_{n-1})=(\phi_n,\phi_n),(x\phi_n,\phi_{i}) = (\phi_n,x\phi_{i})=0,i < n-1$}
+        \item {$\{\phi\}^n_0$正交，则$\phi_n$在区间上有$n$个不同的零点。证明思路将所有零点补成偶数重，则内积大于零（正定），反证法。}
+    }
+    \subsection{最佳平方逼近，Legendre多项式：$\widetilde {P_n}$是首一的}
+    \List{
+        \item {带权$\rho = 1,[-1,1]$正交，$P_0=1;P_n=\frac{\mathrm d^n}{\mathrm dx^n} \frac{(x^2-1)^n}{2^nn!};$ \\ $ (P_n,P_m) = \frac{2}{2n+1}\delta_{m,n}; P_n(-x) = -1^nP_n(x); \widetilde {P_n} = \frac{n!}{(2n)!}\frac{\mathrm d^n}{\mathrm dx^n}(x^2-1)^n; (n+1)P_{n+1} = (2n+1)xP_n - nP_{n-1}$}
+        \item {$P_2 = \frac{3x^2-1}{2},P_3 = \frac{5x^3-3x}{2},P_4=\frac{35x^4-30x^2+3}{8}$}
+        \item {正交函数最佳平方逼近，$a_k=\frac{(f,\phi_k)}{(\phi_k,\phi_k)},f\approx P^* = \sum a_k\phi_k$，余项最低次为$n+1$。$\widetilde {P_n}$是$\widetilde {H_n}$中平方范数最低的}
+        \item {对线性无关非正交多项式函数组做逼近：求$n$元方程$\sum_j(\psi_i,\psi_j)a_j = (\psi_i,f), f \approx S = \sum a_i\psi_i$,最小偏差表达式：$(f,f) - (S,f)$}
+    }
+    \subsection{最佳一致逼近，Chebyshev多项式，$\widetilde{T_n}$是首一的}
+    \List{
+        \item {带权$\rho = \frac{1}{\sqrt{1-x^2}}$正交；$T_n(x) = \cos(n\arccos(x))$,$x \in[-1,1],T_{n+1} = 2xT_n -T_{n-1},(T_m,T_n) = \frac{\pi}{2}\delta_{m,n}(m \ne 0) = \pi (m = n = 0);P_n(-x) = -1^nP_n(x)$；零点位置；$x_k = \cos\frac{2k-1}{2n}\pi k = 1,\cdots,n$；$T_n$首项系数$2^{n-1}$}
+        \item {$\forall P\in\widetilde{H_n},\|T_n\|_\infty\le \|P\|_\infty$，求取低一次的一致逼近多项式$P* = P - a_1\widetilde{T_n}$，$a_1$是$P$首项系数。}
+        \item {Chebyshev多项式插值：采用$T_{n+1}$零点作为$n$次插值多项式的节点，$\|f-L_n\|_\infty \le \frac{M_{n+1}}{2^n(n+1)!}$}
+        \item {最佳一致逼近：$\Delta(f,P_n) = \|f-P_n\|_\infty$偏差点$|f-P_n|_{x_0} = \Delta(f,P_n)$，正偏差点$f-P_n = -\Delta(f,P_n)$，负偏差点$f-P_n = \Delta(f,P_n)$}
+        \item {最佳一致逼近多项式总存在。Chebyshev定理：$P^*_n$是最佳一致逼近，则在$f$上至少有$n+2$个正负相间的偏差点：当不合理的时候可能有更多。}
+        \item {$T_2 = 2x^2-1,T_3 = 4x^3 -3x, T_4 = 8x^4 - 8x^2 + 1,T_5 = 16x^5-20x^3+5x,T_6 = 32x^6-48x^4+18x^2-1$ }
+        \item {$\widetilde{T_n}$是首一同次多项式中无穷范数最低的}
+    }
+    \subsection{曲线拟合和最小二乘}  
+    \List{
+        \item {离散空间带权$\omega$内积:$(f,\phi) = \sum \omega(x_i)\phi(x_i)f(x_i)$}
+        \item {函数组在区间线性相关 $\Rightarrow$ 函数在若干点上线性相关（存在某个线性组合使得在某些点上线性组合为0}
+        \item {$H_n$函数在$n+1$个点上线性相关 $\Rightarrow$ 函数组线性相关}
+    }
+\section{数值积分与数值微分}
+    \List{
+        \item {梯形公式：$\int_a^b f\mathrm dx \approx \frac{b-a}{2}[f(a)+f(b)]$，中矩形公式：$I \approx (b-a)f(\frac{a+b}{2})$，机械求积公式：$I = \sum A_kf(x_k)$，$A_k$成为求积系数或权，仅与$x_k$有关。$\sum A_k = 1$}
+        \item {代数精度：求积公式对不超过$m$次多项式均成立，对$m+1$次不成立，则称$m$次代数精度，常用非线性相关多项式族$x^n$进行测试}
+        \item {机械求积公式选取$x_0,\cdots,x_m$共$m+1$个点至少保证$m$次代数精度（强行解方程可得），此时系数唯一}
+        \item {插值型求积公式：$\int L_n = \int (\sum f_kl_k) = \sum f_k \int l_k$\\ $A_k = \int l_k$，与$n$次代数精度等价（$n$次代数精度$\rightarrow A_k$唯一 $\rightarrow I = \sum A_kf_k \rightarrow \int l_k = \sum A_k f_k = A_k$（利用$l_k(x_j) = \delta_{j,k}$}
+        \item {余项$R[f] = \int R_n = \int \frac{f^{n+1}}{(n+1)!}\omega_{n+1} \overset{\text{中值定理}}{=} Kf^{n+1}$。推广对于$m$次代数精度的求积式，$R[f] = Kf^{(m+1)},K$由对$f=x^{m+1}$求积（$f^{(m+1)}=\mathrm{const.}$）定量求得（形式必为$R[f] = k(b-a)^{m+2}M_{m+1}$，因此可以在$[0,1]$下计算器求解）。对梯形公式：$m=1,R[f] \le \frac{(b-a)^3}{12}M_2$，中矩形公式：$m=1,R[f] \le \frac{(b-a)^3}{24}M_2$}
+        \item {收敛性：$h$区间足够小趋近真值。稳定性：$f$有误差$\widetilde f$误差不放大$\rightarrow \forall k,A_k >0$，插值型积分公式不一定稳定}
+        \item{Newton-柯特斯公式:积分区间等距取点的插值型机械求积公式，辛普森公式（$n=2$）：$S = \frac{b-a}{6}[f(a) + 4 f(\frac{a+b}{2}) + f(b)],R[f] < \frac{(b-a)^5}{180*16}M_4$，柯特斯公式（$n=4$）：$S = \frac{b-a}{90}[7f(x_0) + 32f(x_1) + 12f(x_2) + 32 f(x_3) + 7 f(x_4)], R[f] < \frac{(b-a)^7}{945*2048}M_6$，$n=8$，积分公式不稳定,出现误差放大，放大倍数为$\sum |A_k| > \sum A_k = 1$，$n$为偶数时，代数精度为$n+1$，为奇数时为$n$（采用中值定理时通过埃尔米特插值方法保证其他项不变号）}
+    }
+    \subsection{复合求积公式和Romberg 求积公式}
+    \List{
+        \item {复合梯形 $T_n = \frac{h}{2}[f(a) + 2 \sum f(x_k) + f(b)], R_n[f] = \frac{b-a}{12}h^2M_2$}
+        \item {复合Simpson $S_n = \frac{h}{6}[f(a) + 4 \sum f(x_{k+\frac12}) + 2\sum f(x_k) + f(b)],R_n[f] = -\frac{b-a}{180}(\frac{h}{2})^4M_4$}
+        \item {梯形公式递推：$T_{2n} = \frac{T_n}{2} + \frac{h}{2}\sum f(x_k+\frac12)$}
+        \item {Richardson外推加速法：$T(h) = I + \alpha h^2 + \cdots $，利用$T(h),T(\frac h2)$消除$h^2$项得到$S(h)$。逐渐外推加速。递推公式$T_m(h) = \frac{4^m}{4^m-1}T_{m-1}(\frac h2) - \frac {T_{m-1}(h)}{4^m-1}$}
+        \item {Romberg 求积算法：1. 取$k=0,h=b-a,T_0=\frac h2[f(a)+f(b)]$ 2. 加速求$T$，包括一个梯形值$T_0(\frac{b-a}{2^k})$，到达给定精度结束。$h$越小代表复化程度越高，阶次越高代表求积越复杂。} 
+    }
+    \subsection{Gauss求积公式}
+    \List{
+        \item {求取$A_k,x_k$使得机械求积有$2n+1$次精度（正好全部满足）。充要条件：$x_k$是$n+1$次带权正交多项式的零点：证明思路：前$n$次说明$A_k$取值为插值型，后$n+1 - 2n+1 $次对应导数为$x \cdots x_n$带权内积为0，说明高一次正交。积分权重全部是正的$\int l_k^2$可以准确得到，即$\sum A_il_k^2 = A_k >0$}
+        \item {Gauss-Legendre求积：Legendre多项式零点。$\int^1_{-1}f = 2f(0) = f(-\frac{1}{\sqrt{3}}) + f(-\frac{1}{\sqrt{3}}) = \frac59f(-\frac{\sqrt{15}}5) + \frac89f(0) + \frac59f(\frac{\sqrt{15}}5), R_n[f] = \frac{2^{2n+3}[(n+1)!]^4}{(2n+3)[(2n+2)!]^3}M_{2n+2}$}
+        \item {Gauss-Chebyshev求积：$\int_{-1}^1 \frac f{\sqrt{1-x^2}} = \frac \pi n\sum f(x_k), x_k = \cos\frac{2k-1}{2n}\pi, 1 \le k \le n$}
+        \item {多重积分；从外向内定参数积分，反复求积，计算量较大}
+    }
+    \subsection{数值微分}
+    \List{
+        \item {中点方法 $G(h) = \frac{f(a+h) - f(a-h)}{2h}, |f'(a) -G(h)| \le \frac{h^2}{6}M_3$，可以外推加速，但是要对余项进行分析。$G_m(h) = \frac{4^mG_{m-1}(\frac h2) - G_{m-1}(h)}{4^m-1}$}
+        \item {插值方法：$f' \approx P'$，求导数的点就在某个节点上，$R = R_n' \le \frac{M_{n+1}}{(n+1)!}\omega_{n+1}'$，其中一点方法为直接求斜率，余项$\frac h2 f''$，三点方法对中间一点直接为中点公式，中间一个点没参与计算。}
+    }
+\section{非线性方程与方程组的数值解法}
+    \List{
+        \item {不动点迭代法：$f(x) = 0 \rightarrow \phi(x) = x$迭代。不动点存在条件为$\exists a,b\forall x \in [a,b]. a \le \phi(x) \le b, \exists L < 1, s.t. |\phi(x)-\phi(y)| \le L|x-y|, |\phi(x)'| < 1$}
+        \item {序列误差估计$x_k-x^* \le \frac {L^k}{1-L}|x_1-x_0|, e_k = x_k - x*, \lim_{k\to\infty} \frac{e_{k+1}}{e_k^p} = C \ne 0$则称$p$阶收敛，$p = 1$线性收敛，$p = 2$平方收敛，$p>1$超线性收敛}
+        \item {迭代法局部收敛：存在邻域$R$使得$|\phi(x)| < 1$，需要选取初始点}
+        \item {若$\phi^{(p-1)}(x^*) = 0,\phi^{(p)}(x^*) \ne 0$，后者连续，则$p$阶收敛}
+    }
+    \subsection{Newton法及其衍生方法}
+    \List{
+        \item {Newton法：$\psi(x) =x - \frac{f(x)}{f'(x)}$，平方收敛速度}
+        \item {$\psi'(x) = \frac{ff''}{(f')^2},\phi''(x^*) = \frac{f''(x^*)}{f'(x^*)}$}
+        \item {Newton下山法：下山条件$|f_{k+1} < f_k|, \psi(x) = x-\lambda \frac f{f'}$从$\lambda=1$开始试算，直到满足下山条件}
+        \item {简化Newton法：$\psi = x - \frac{f(x)}{f'(x_0)}$，线性速度}
+        \item {出现$m$重根时，普通Newton法变为一次收敛，$\psi = x -\frac f {mf'},\psi = x - \frac{ff'}{(f')^2 - ff''}$二阶收敛。}
+        \item {弦截法：$x_{k+1} = x_k -\frac{f(x_k)(x_k - x_{k-1})}{f(x_k) - f(x_{k-1})},\frac{1+\sqrt 5}2$阶收敛，抛物线法：1.840阶收敛}
+    }
+\section{常微分方程初值问题的数值解法}
+    \subsection{线性单步法}
+    \List{
+        \item {满足L.条件的微分方程误差传播$|y(x,x_0) - y(x,\widetilde{x_0}| \le \exp(L|x_0 - \widetilde{x_0}|)|x_0 - \widetilde(x_0)|$，数值计算过程中等距取点迭代计算，$y(x_{n+1} = y(x_n) + h\psi, y'=f(x,y)$}
+        \item {局部截断误差$y -\widetilde y =\mathcal O(h^{p+1})$，称为$p$阶精度，其$h^{p+1}$对应主项为阶段误差主项}
+        \item {欧拉法：$\psi =y'(x_n)$，1阶局部误差精度；向后欧拉法（隐式）：$\psi = y'(x_{n+1})$，一阶局部误差精度；梯形方法（隐式）：$\psi = \frac{y'(x_n) + y'(x_{n+1})}{2}$2阶局部误差精度；改进欧拉法：$\psi = f(x_n,y_n) + f(x_{n+1},\overline{y_{n+1}}),\overline{y_{n+1}} = y_n + hf(x_n,y_n)$2阶局部误差精度。隐式方法需要通过迭代确定未知值}
+        \item {Runge-Kutta方法：局部线性积分$\displaystyle{\psi = \frac{1}{r} \sum_{i=1}^r C_iK_i}$, $\displaystyle{K_i = f(x_n + \lambda_ih,y_n + h\sum_{j=1}^i\mu_{ij}K_j)}$，具体数值不唯一}
+        \item{总体误差：对局部精度为$p$的，$y(x_n) - y_n = \mathcal O(h^p)$（精度累计降低一次）}
+        \item {高阶方程组：处理成一阶状态方程的形式}
+    }
+    \subsection{线性多步法}
+    \List{
+        \item{$G(x) = f(x,y(x)),y(x_{n+1}) = y(x_n) + \int_{x_n}^{x^{n+1}} G(x) $ 积分过程，$G(x)$通过前面得到的点插值得到}
+        \item {显性公式（用于预测）一般形式：$\psi = \sum\beta_{mi}f_{n-i}$\\ $\beta_{mi}$是标准化$m$次插值基函数积分值}
+        \item {隐性公式（用于矫正：将采样点包括了即将计算的点）$\psi = \sum\beta_{mi}f_{n-i+1}$}
+        \item {局部截断误差相当于积分误差}
+    }
+\section{解线性方程组的直接解法}
+    \List{
+        \item {L的逆矩阵仍是L矩阵，因此LU分解唯一}
+		\item {直接方法：适用于低阶矩阵，迭代方法：适用于高阶矩阵}
+        \item {矩阵$\bm{A}$的特征值组合成为$\bm{A}$的谱$\sigma(\bm{A})$，特征值绝对值的最大值称为其谱半径$\rho(\bm{A})$}
+        \item {矩阵范数：基本要求：$\|\bm A\|\ge 0,\|\bm A\| = 0 \iff A = 0,\|c\bm A\| = |c|\|\bm A\|, \|\bm A + \bm B \| = \|\bm A\| + \| \bm B\|, \|\bm A\bm B\| = \|\bm A\|\|\bm B\|$}
+        \item {算子范数：结合向量范数给出，$\|\bm A\|_v \triangleq \max \frac {\|\bm A x\|_v}{\|x\|_v}$}
+        \item {$\|\bm A\|_\infty= \max_{1\le i \le n}\sum_j|a_{ij}|$，最大的行的绝对值的和}
+        \item {$\|\bm A\|_1= \max_{1\le j \le n}\sum_i|a_{ij}|$，最大的列的绝对值的和}
+        \item {$\|\bm A\|_2= \sqrt{\lambda_{\max}(\bm A^T\bm A)}$，最大的特征值的平方根}
+        \item {向量范数连续。$\forall s,t \exists c_1,c_2, c_1\|x\|_s \le \|x\|_t \le c_2\|x\|_s$}
+        \item {$\rho(\bm A) \le \|\bm A\|. \forall \epsilon, \exists (\|\cdot\|_{\epsilon}), \|\bm A\|_{\epsilon} \le \rho(\bm A) + \epsilon$，证明谱半径关系可以通过范数来计算}
+        \item {$\|\bm Ax\|_v \le \|\bm A\|_v\|x\|_v.\bm A^T = A\Rightarrow \|\bm A\|_2 = \rho(\bm A)$}
+        \item {$\|\bm B\| \le 1 \Rightarrow |\bm I\pm \bm B| \ne 0, (\bm I - \bm B)^{-1} = \bm I + \bm B(\bm I - \bm B)^{-1} \Rightarrow \|(\bm I \pm \bm B)^{-1}\| \le \frac 1{1-\|\bm B\|}$}
+        \item {矩阵条件数：$\mathrm{cond}(\bm A)_v = \|\bm A^{-1}\|_v\|\bm A\| \ge \|\bm I\|_v = 1$}
+        \item {$\mathrm{cond}(c\bm A)_v = \mathrm{cond}(\bm A)_v; \bm A = \bm A^T \rightarrow \mathrm{cond}(A)_2=|\lambda_1/\lambda_n|;\bm A\bm A^T = \bm I \rightarrow \mathrm{cond}(\bm A)_2 = 1,\mathrm{cond}(\bm A \bm B)=\mathrm{cond}(\bm B \bm A) = \mathrm{cond}(\bm B) $}
+    }
+    \subsection{LU分解和P-LU分解}
+    \List{
+        \item {手算过程中常常采用初等行变换方法得到$U,L^{-1}$，需要对右侧矩阵求逆：对角线为1的三角阵求逆即是将其他元素取相反数}
+        \item {LU 分解唯一，PLU分解不一定唯一，LU分解要求各阶顺序主子式非零，P-LU分解要求矩阵非奇异}
+        \item {回代消元法计算代价$\frac{n^3}{3}-n^2-\frac n3$次乘除，$\frac{n^3}{3}-n^2-\frac n3$次加减}
+        \item {P-LU 分解复杂度$\mathcal O(\frac{n^3}3)$，平方根法计算复杂度$\mathcal O(\frac{n^3}6)$}
+        \item {平方根法：$\bm A = \bm A^T \Rightarrow \bm A = \bm L\bm D \bm L_T = \bm L_1 \bm L_1^T$}
+    }
+    \subsection{误差分析}
+    \List{
+        \item {$\bm A(x+\delta x) = (b+\delta b) \Rightarrow \frac{\|\delta x\|}{\|x\|}\le \mathrm{cond}(\bm A) \frac{\|\delta b\|}{\|b\|}$}
+        \item {$(\bm A + \delta\bm A)(x+\delta x) = b \Rightarrow \frac{\|\delta x\|}{\|x\|}\le \frac{\mathrm{cond}(\bm A) \frac{\| \delta \bm A\|}{\|\bm A\|}}{1-\mathrm{cond}(\bm A)\frac{\| \delta \bm A\|}{\|\bm A\|}}$}
+        \item {近似：$(\bm A + \delta\bm A)(x+\delta x) = (b+\delta b) \Rightarrow \frac{\|\delta x\|}{\|x\|}\le \mathrm{cond}(\bm A) (\frac{\|\delta b\|}{\|b\|} + \frac{ \|\delta \bm A\|}{\|\bm A\|})$}
+        \item {事后估计法：得到$\widetilde x$，$\frac{\|\widetilde x - x^*\|}{\|x^*\|} \le \mathrm{cond}(\bm A)\frac{\|b - \bm A \widetilde x\|}{\|b\|}$}
+    }
+\section{解线性方程组的迭代法}
+    \List{
+        \item {矩阵收敛：$\lim_{k\to\infty}\bm A_k = \bm A\iff\lim_{k\to\infty}\|\bm A_k-\bm A\| = 0,\lim_{k\to\infty} \bm A_k =0 \iff \lim_{k\to\infty} \bm A_kx=0, \forall x\in \mathbb R^n$}
+        \item {迭代法基本形式：$x = \bm B x + f \iff \bm A x = b$，收敛条件$\rho(\bm B) < 1$}
+        \item {可以采用$\rho(\bm B) \le \|\bm B\|_v <1$的任意从属范数来证明，$\lim_{k\to\infty}\|\bm B^k\|^{1/k} = \rho (\bm B)$}
+        \item {$\|\bm B\|_v = q < 1 \Rightarrow \|x^*-x^{(k)}\|_v \le q^k \|x^*-x^0\|_v$\\ $\|x^*-x^{(k)}\|_v \le \frac{q\|x^{(k)}-x^{(k-1)}\|_v}{1-q} \le \frac{q^k\|x^{1}-x^{0}\|_v}{1-q} $\\ 如果精度取到$\sigma = 10^{-s}$迭代次数$K \ge \frac{s\ln10}{-\ln\rho (\bm B)}$}
+        \item {平均收敛速度$R_k(\bm B) = -\ln(\|\bm B\|_v^{1/k})$，渐进收敛速度$R(\bm B) = -\ln \rho (\bm B) = \lim_{k\to\infty}R_k(\bm B)$}
+    }
+    \subsection{Jacobi和Gauss-Seidel迭代法：$\bm A = \bm D - \bm L - \bm U$}
+    \List{
+        \item {Jacobi迭代法：$\bm Dx = (\bm L + \bm U)x + b\Rightarrow\\\bm  B = \bm D^{-1}(\bm L + \bm U) = \bm I - \bm D^{-1}\bm A = \bm J$}
+        \item {Gauss-Seidel迭代法：$(\bm D - \bm L) x = \bm U x + b \Rightarrow\\\bm  B = (\bm D - \bm L)^{-1}\bm U = \bm I - (\bm D - \bm L)^{-1}\bm A = \bm G$}
+        \item {收敛性：$\rho (\bm J) <1,\rho(\bm G) <1$}
+        \item {严格对角占优矩阵：对角线的绝对值大于同行其他元素绝对值的和，弱对角占优矩阵：大于等于}
+        \item {可约矩阵：$\exists \bm P \mathrm{ s.t. } \bm P^T\bm A\bm P = \begin{pmatrix} \bm A_{11} & \bm A_{12} \\ \bm 0 & \bm A_{22}\end{pmatrix}$，则$\bm A$可约}
+        \item {严格对角占优矩阵和不可约弱对角占优矩阵Jacobi方法和Gauss-Seidel方法收敛（使用无穷范数代替谱半径证明）}
+        \item {若$\bm A$正定对称，Gauss-Seidel方法收敛，若$2\bm D - \bm A$同时正定，Jacobi方法收敛}
+        \item {直觉上来看，Gauss-Seidel方法的谱半径更小（参考无穷范数），但是实际上不一定，两种方法均有对方收敛和自己不收敛的情况}
+    }
+    \subsection{逐次超松弛迭代法（SOR）}
+    \List{
+        \item {对Gauss-Seidel方法加速：$x^{(k+1)} = \bm D^{-1}[b - \bm Lx^{(k+1)} - \bm Ux^{(k)}] = x^{(k)} + \bm D^{(-1)}[b - \bm Lx^{(k+1)} - (\bm D + \bm U)x^{(k)}]$，通过对G-S的$x^{(k+1)}$和$x^{(k)}$加权得到下一个值}
+        \item {$x^{(k+1)} = \omega x^{(k+1)} + (1 - \omega x^{(k)}) = \bm L_\omega x^{(k)} + f, \bm L_\omega = (\bm D + \omega \bm L)^{-1}[(1-\omega)\bm D -\omega \bm U]$}
+        \item {收敛必要条件：$0 < \omega < 2$，证明思路：$\rho(\bm B) < 1 \Rightarrow |\mathrm{det}\bm B| < 1$}
+        \item {$\bm A$正定对称且$0 < \omega < 2$，则SOR收敛}
+        \item {舍入误差分析：$\|\delta_{k+1}\| \le \|\bm B\| \|\delta_k\| + \|\Delta\|$，$\|\Delta\|$为存储误差}
+    }
+\section{矩阵的特征值计算}
+    \List{
+        \item {$\bm A$的每个特征值必然在下面的某个圆盘之中：$|\lambda -a_{ii}| \le r_i =\sum_{i\ne j}a_{ij}$。换言之，$\bm A$的特征值在上述圆盘的并集中}
+        \item {上述圆盘如果存在$m$个圆盘孤立于其他的圆盘，则必然这个区间内有$m$个特征值，特殊地，如果有一个孤立的圆盘，则其中必然仅有一个特征值，如果$A\in\mathbb R^{n\times n}$，则此时该特征值必然为实数}
+        \item {$\mu =\lambda(\bm A + \delta(\bm A))\in \mathbb R^{n\times n}, \bm P^{-1}\bm A\bm P = \bm D$则$\min_{\lambda\in\sigma(\bm A)}|\lambda-\mu| \le \mathrm{cond}(\bm P)_p\|\delta(\bm A)\|_p$}
+    }
+    \subsection{幂法和反幂法}
+    \List{
+        \item {幂法：迭代$v^{k+1} = \bm Av^k$之后得到$\lim_{k\to\infty}\frac{v_{k+1}}{v_k} = \lambda_1$}
+        \item {幂法计算流程：随机取$u_0\rightarrow$计算$v_1 = \bm Au_0,u_1 = \frac{v_1}{\max(v_1)}$不断计算，最终$\lambda_1 = \frac{v_{k+1}}{u_k} = \lim_{k\to\infty}\max(v_k)$，收敛速度$|\frac{\lambda_2}{\lambda_1}|$确定}
+        \item {对于重根，幂法最终得到的特征值是正确的，对应的特征向量$u_k$可能随初始值选取的不同出现不同结果}
+        \item {问题：只能求解最大的。原点平移方式$\bm A' = \bm A - c\bm I$可以改进速度，并求取最大的和最小的特征值}
+        \item {Rayleigh商加速：求取$\frac{(\bm Au_k,u_k)}{(u_k,u_k)}$来获得最后的特征值，有更高的精度（余项$\mathcal O(\frac {\lambda_2}{\lambda_1}^2)$，相比于之前的速度高一次）}
+        \item {反幂法：计算按模最小的特征值和对应的特征向量，在已知近似特征值的情况下可以通过此方法得到有效的精确值}
+        \item {迭代方法：$u_0$随机，$v_k = \bm A^{-1}u_{k-1},u_k = \frac{v_k}{\max v_k}$\\ $\frac 1{\lambda_n} = \lim_{k\to\infty}\max v_k$}
+        \item {收敛速度：$|\frac{\lambda_n}{\lambda_{n-1}}|$，原点平移之后为$|\frac{\lambda_n - p}{\lambda_{n-1} - p}|$}
+        \item {Rayleigh商加速仍然可以提高最后一次计算的精度，一般事先现将$\bm A$LU分解方便之后求方程}
+        }
+        \subsection{正交变换和矩阵分解，QR方法}
+        \List{
+            \item{Householder 变换：$\omega^T\omega = 1, \bm H(\omega) = \bm I -2\omega\omega^T$构成反射矩阵，正交对称，$\bm H = \bm H^T = \bm H^{-1}, \bm A = \bm A^T \rightarrow \bm H\bm A\bm H$对称}
+            \item {$\|x\|_2 = \|y\|_2 \Rightarrow \exists \bm H, \bm Hx = y$，可以将任意一个向量约化到坐标轴上，其中$u = x - y,\bm H = \bm I  - 2\frac{uu^T}{(u,u)}$}
+            \item {Givens变换：两轴上的一个旋转变换，可以将任意两轴上$(x_i,x_j)$旋转到$(\sqrt{x_i^2+x_j^2},0)$，$\begin{pmatrix} \cos\theta & \sin\theta \\ -\sin\theta & \cos\theta\end{pmatrix}$}
+            \item {QR分解定理和实舒尔分解：$\bm A = \bm Q\bm R,\bm Q^T\bm A\bm Q = \bm U_{\bm R}$其中一阶$\bm R_{ii}$是一阶特征值，二阶$\bm R_{ii}$特征值$\bm A$共轭特征值}
+            \item {QR方法：迭代过程：$\bm A_k = \bm Q_k\bm R_k,\bm A_{k+1} = \bm R_k\bm Q_k \Rightarrow \bm A_k\bm Q_k = \bm Q_k\bm A_{k+1}\Rightarrow \bm A_{k+1} = \bm Q_k^T\bm A_k\bm Q_k$ }
+            \item {收敛：若$\bm A$特征值满足$|\lambda_1| >|\lambda_2| >\cdots>|\lambda_n|$，可以对角化成标准型$\bm A = \bm X \bm D \bm X^{-1}$，$\bm X$可以LU分解，则$\{\bm A_k\}$本质上收敛于上三角矩阵，$\lim_{k\to\infty}a_{ii}^k = \lambda_i,a_{ij,i\ne j} = 0$}
+            \item {原点位移法：$\bm A_k -s_k\bm I= \bm Q_k\bm R_k,\bm A_{k+1} = \bm R_k\bm Q_k + s_k\bm I$，调整每一步的$s_k$使得收敛率$|\frac{\lambda_n - s_k}{\lambda_{n-1}-s_k}|$尽可能小}
+            \item {给定原点位移为一个特征值$\mu$的上海森伯格矩阵（带一个下副对角线的上三角矩阵）进行一次原点位移QR分解之后$h_{n,n-1} = 0,h_{nn} = \mu$（单步QR方法）}
+            }
+\section{补充材料}
+    \subsection{Newton法误差的精确分析}
+    原则上$e_{n+1} \le  \psi'(x)e_n + \Delta $，在精度足够高的情况下$\psi'(x) \approx \psi (x^*) = 0,e_{n+1} = \Delta$。然而手算不能这么算。
+    非线性方程求根，$x_{n+1} - x^* = \psi(x_n) - \psi(x^*) \Rightarrow e_{n+1} = \psi'(x^*)e_n + \cdots + \frac{\psi^{(m)}e^m_n}{m!}$\\ 
+    对于Newton法，变为$e_{n+1} = \frac{\psi''(\xi)e_n^2}2$，选取初始区间$[x^*-\delta,x^*+\delta]$，可以得到$M_2$，则$\frac{M_2}2|e_{n+1}| \le {\frac{M_2|e_n|}2} ^2 \le [\frac{M_2}2|e_0|]^{2^{n+1}}$这里$n$不足够大因此$e_{n+1} \ne 0$。当$\frac{M_2}2|e_0|<1$，相当于$|\psi'| < 1$的条件。\\
+    \subsection{Romberg 方法相关补充}
+    $T_m(h)$为某个复化算法分割$h$长度的效果$m$为其阶数，Richardson消去得到前面写的式子$T_m(h) = \frac{4^m}{4^m-1}T_{m-1}(\frac h2) - \frac {T_{m-1}(h)}{4^m-1}$，分析表如下所示，阶次越高（向右）区间误差越小，分割越小（向下）区间长度越小。（牛顿均差的表跟这个的结构是一样的）
+    \subsection{利用积分公式求解微分公式}
+    $\int_{x_{k-1}}^{x_{k+1}}f' = f(x_{k+1}) - f(x_{k-1})$，利用机械求积公式写成$I = \sum A_kf'_k$的形式反向求线性方程组，如果使用中矩形公式则可以直接求取，效果等同于中点公式。中间差商公式可以采用Richardson外推加速进行加速，$G(h) = \frac{f(x+h) - f(x-h)}{2h} = f'(x) + \alpha h^2 + \mathcal O(h^4)$，得到$G_1(h) = \frac43G_0(\frac h2) -\frac13G_0(h)$\\
+    \subsection{改进欧拉法和欧拉法的累积误差分析}
+    方法单步误差：$\frac {h^2}2y{(2)}(\xi)$。记$M \ge |\frac{\partial f}{\partial y}(x,y)|,L \ge y^{(2)}(\xi)$，方法误差传播：$\Delta_{n+1} = (1 + h\frac{\partial f}{\partial y}(x_n,y_n))\Delta_n + \frac {h^2}2y^{(2)}(\xi)$ ，配参数可以得到$\Delta_{n+1} + \frac {Lh^2}{2hM} \le (1 + hM)(\Delta_{n} + \frac {Lh^2}{2hM}) \le (1 + hM)^{n+1}\frac {Lh^2}{2hM}$\\
+    对欧拉法，如果考虑存储误差为$\Delta = \frac{10^{-m}}2$，存储误差同上得到$\delta_{n+1}\le (1+hM)\delta_n + \Delta$。变换得到$\delta_{n+1} + \frac{10^{-m}}{2hM} \le (1 +hM)(\delta_n+\frac{10^{-m}}{2hM}) \le (1 + hM)^{n+1}\frac{10^{-m}}{2hM}$。
+    上述方法误差和存储误差没有联合分析，联合分析相对更加复杂。\\
+    改进欧拉法：方法累计误差$\overline{\Delta_{n+1}} \le (1+hM)\Delta_n + \frac{Lh^2}2,\Delta_{n+1} \le \Delta_n + \frac{hM\Delta_n}2 + \frac {hM\overline{\Delta_{n+1}}}2 + \frac{Th^3}{12}$，其中$T \ge y^{(3)}$\\
+    $\Rightarrow \Delta_{n+1} \le (1 + hM + \frac{h^2M^2}2)\Delta_n + (\frac{LM}4+\frac T{12})h^3$\\
+    舍入累计误差：$\overline{\delta_{n+1}} \le (1 + hM)\delta_n + \Delta,\delta_{n+1} \le \delta_n + \frac {hM\delta_n}2 + \frac{hM\delta_{n+1}}2 + \Delta$\\
+    $\Rightarrow \delta_{n+1} \le (1 + hM + \frac{h^2M^2}2)\delta_n + (1 +\frac{hM}2\Delta)$\\
+    \subsection{直接LU分解法}
+    \List{
+        \item {$u_{1i} = a_{1i}, l_{i1} = a_{i1} / u_{11}; u_{ri} = a_{ri} - \sum_{k=1}^{r-1} l_{rk}u_{ki}$}
+        \item {$l_{ir} = (a_{ir} - \sum_{k=1}^{r-1} l_{ik}u_{kr})/ u_{rr}$}
+        \item {$y_1 = b_1, y_i = b_i - \sum_{k=1}^{i-1} l_{ik}y_k$}
+        \item {$x_n = y_n / u_{nn},x_i = (y_i-\sum_{k=i+1}^nu_{ik}x_k) / u_{ii}$}
+    }
+    \subsection{追赶法：求解三对角矩阵}
+    \List{
+        \item {要求$|b_1| >|c_1| >0,|b_n| > |a_n| > 0, |b_i| \ge |a_i| + |c_i|$}
+        \item {追：$\beta_1 = c_1/b_1, \beta_i = c_i/(b_i-a_i\beta_{i-1})$}
+        \item {追：$y_1 = f_1 / b_1, y_i = (f_i - a_iy_{i-1})/(b_i - a_i\beta_{i-1})$}
+        \item {赶：$x_n = y_n,x_i = y_i -\beta_ix_{i+1}$}
+        \item {$\begin{pmatrix} b_1 & c_1 & \\ a_1 & b_2 & c_2 \\ & a_2 & b_3 \end{pmatrix} = \begin{pmatrix} \alpha_1 & & \\ r_2 & \alpha_2 & \\ & r_3 & \alpha_3 \end{pmatrix} \begin{pmatrix} 1 & \beta_1 & \\ & 1 & \beta_2 \\ & & 1\end{pmatrix}$}
+    }
+
+\end{multicols}
+\end{document}
